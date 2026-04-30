@@ -122,15 +122,33 @@
         }
     }
 
-    async function load() {
-        try {
-            const res = await fetch(PROXY_URL);
-            globalMatrix = await res.json();
-            render();
-        } catch (e) {
-            console.error("Erreur de chargement", e);
+  async function askGemini(prompt, elementId) {
+    const el = document.getElementById(elementId);
+    try {
+        // On ajoute un signal visuel de chargement
+        el.innerHTML = '<span class="ai-loading">Le Sphinx réfléchit...</span>';
+        
+        const response = await fetch(`${PROXY_URL}?prompt=${encodeURIComponent(prompt)}`, {
+            method: 'GET',
+            mode: 'cors', // Force le mode CORS pour GitHub
+            cache: 'no-cache'
+        });
+
+        if (!response.ok) throw new Error("Réponse réseau incorrecte");
+
+        const text = await response.text();
+        
+        // Sécurité : si la réponse est vide ou contient une erreur Google
+        if (!text || text.includes("error")) {
+            throw new Error("Erreur API");
         }
+
+        el.innerHTML = text;
+    } catch (e) {
+        console.error("Détail de l'erreur:", e);
+        el.innerHTML = "Le Sphinx est fatigué, cliquez sur une flèche pour réessayer.";
     }
+}
 
     function render() {
         const phone = document.getElementById('viewport-y');
