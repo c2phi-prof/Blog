@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Labyrinthe Panoptique IA</title>
+    <style>
+        :root { --primary: #1a73e8; --bg-dark: #0f0f0f; --sidebar-bg: #1a1a1a; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg-dark); color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        #dashboard { display: flex; width: 95vw; height: 90vh; max-width: 1400px; gap: 40px; align-items: center; }
+        
+        /* PLAN SIDEBAR (Masqué par défaut pour le jeu) */
+        #plan-sidebar { width: 300px; height: 85%; background: var(--sidebar-bg); border-radius: 24px; padding: 25px; display: none; flex-direction: column; }
+        #plan-sidebar.debug { display: flex; }
+        
+        .nav-item { font-size: 12px; padding: 8px; color: #888; cursor: pointer; transition: 0.3s; }
+        .nav-item.active { color: white; background: var(--primary); border-radius: 6px; }
+
+        /* SMARTPHONE */
+        #phone-shell { height: 85vh; aspect-ratio: 9 / 19; background: white; border: 12px solid #222; border-radius: 45px; position: relative; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.8); }
+        #viewport-y { height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; }
+        .row-container { height: 100%; width: 100%; scroll-snap-align: start; position: relative; }
+        .viewport-x { display: flex; height: 100%; overflow-x: scroll; scroll-snap-type: x mandatory; scrollbar-width: none; }
+        .slide { min-width: 100%; height: 100%; scroll-snap-align: start; padding: 80px 30px; box-sizing: border-box; color: #111; font-size: 22px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+
+        /* FLÈCHES */
+        .nav-arrow { position: absolute; background: rgba(0,0,0,0.1); border: none; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 100; font-size: 24px; }
+        .nav-arrow.visible { display: flex; }
+        .arrow-up { top: 20px; left: 50%; transform: translateX(-50%); }
+        .arrow-down { bottom: 20px; left: 50%; transform: translateX(-50%); }
+        .arrow-left { left: 10px; top: 50%; transform: translateY(-50%); }
+        .arrow-right { right: 10px; top: 50%; transform: translateY(-50%); }
+        
+        /* IA LOADING */
+        .ai-loading { font-style: italic; color: var(--primary); font-size: 14px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<div id="dashboard">
+    <div id="plan-sidebar">
+        <h2 style="font-size:10px; color:#555;">VUE PANOPTIQUE</h2>
+        <div id="plan-list" style="overflow-y: auto; flex: 1;"></div>
+    </div>
+
+    <div id="phone-shell">
+        <button id="v-up" class="nav-arrow arrow-up" onclick="moveV(-1)">↑</button>
+        <button id="v-down" class="nav-arrow arrow-down" onclick="moveV(1)">↓</button>
+        <div id="viewport-y"></div>
+    </div>
+</div>
+
+<script>
+    const PROXY_URL = "https://script.google.com/macros/s/AKfycbybZgEjBXJwU2dchtMYsOywHFJCrCQNenpa9gl095je97M4fESXg8JvHn3csGcYWYdxGw/exec"; 
+    let globalMatrix = [];
+    let curR = 0, curC = 0;
+
+    async function load() {
+        const res = await fetch(PROXY_URL);
+        globalMatrix = await res.json();
+        render();
+    }
+
+    function render() {
+        const phone = document.getElementById('viewport-y');
+        const plan = document.getElementById('plan-list');
+        globalMatrix.forEach((row, rIdx) => {
+            const rowBlock = document.createElement('div');
+            rowBlock.className = 'row-container';
+            const sliderX = document.createElement('div');
+            sliderX.className = 'viewport-x';
+            
+            row.forEach((cell, cIdx) => {
+                const slide = document.createElement('div');
+                slide.className = 'slide';
+                slide.id = `s-${rIdx}-${cIdx}`;
+                slide.dataset.r = rIdx; slide.dataset.c = cIdx;
+                
+                // INTERPRÉTEUR IA SIMPLE
+                if (cell && cell.toString().startsWith("[AI_TEXT]")) {
+                    slide.innerHTML = `<div class="ai-loading">L'IA rédige...</div>`;
+                } else {
+                    slide.innerHTML = `<div>${cell || ""}</div>`;
+                }
+                
+                sliderX.appendChild(slide);
+                if (cell) {
+                    const item = document.createElement('div');
+                    item.className = 'nav-item';
+                    item.id = `link-s-${rIdx}-${cIdx}`;
+                    item.innerText = `[${rIdx}:${cIdx}] ${cell.toString().substring(0,15)}`;
+                    plan.appendChild(item);
+                }
+            });
+
+            const bL = document.createElement('button'); bL.id = `arr-l-${rIdx}`; bL.className='nav-arrow arrow-left'; bL.innerText='‹';
+            bL.onclick = () => document.getElementById(`s-${rIdx}-${curC-1}`).scrollIntoView({behavior:'smooth'});
+            const bR = document.createElement('button'); bR.id = `arr-r-${rIdx}`; bR.className='nav-arrow arrow-right'; bR.innerText='›';
+            bR.onclick = () => document.getElementById(`s-${rIdx}-${curC+1}`).scrollIntoView({behavior:'smooth'});
+
+            rowBlock.append(bL, bR, sliderX);
+            phone.appendChild(rowBlock);
+        });
+        setupObs();
+    }
+
+    function moveV(dir) {
+        const target = document.getElementById(`s-${curR+dir}-${curC}`);
+        if(target) target.scrollIntoView({behavior:'smooth'});
+    }
+
+    function setupObs() {
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if(e.isIntersecting) {
+                    curR = parseInt(e.target.dataset.r);
+                    curC = parseInt(e.target.dataset.c);
+                    updateUI();
+                }
+            });
+        }, { root: document.querySelector('#phone-shell'), threshold: 0.7 });
+        document.querySelectorAll('.slide').forEach(s => obs.observe(s));
+    }
+
+    function updateUI() {
+        const check = (r, c) => globalMatrix[r] && globalMatrix[r][c] && globalMatrix[r][c].toString().trim();
+        document.getElementById('v-up').classList.toggle('visible', !!check(curR-1, curC));
+        document.getElementById('v-down').classList.toggle('visible', !!check(curR+1, curC));
+        document.querySelectorAll('.arrow-left, .arrow-right').forEach(a => a.classList.remove('visible'));
+        document.getElementById(`arr-l-${curR}`).classList.toggle('visible', !!check(curR, curC-1));
+        document.getElementById(`arr-r-${curR}`).classList.toggle('visible', !!check(curR, curC+1));
+    }
+
+    // CHEAT CODE : Tapez "panoptique" au clavier
+    let keys = "";
+    window.onkeydown = (e) => {
+        keys += e.key;
+        if(keys.includes("panoptique")) {
+            document.getElementById('plan-sidebar').classList.toggle('debug');
+            keys = "";
+        }
+    };
+
+    load();
+</script>
+</body>
+</html>
