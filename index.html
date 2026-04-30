@@ -3,96 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <title>Labyrinthe Panoptique</title>
-    <style>
-        :root { 
-            --bg-color: #0a0a0a;
-            --phone-bg: #ffffff;
-            --text-main: #1a1a1a;
-            --text-muted: #888888;
-        }
+   <style>
+    :root { --bg: #0a0a0a; --phone: #ffffff; --text: #1a1a1a; }
+    body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg); display: flex; align-items: center; justify-content: center; font-family: sans-serif; }
 
-        body, html { 
-            margin: 0; padding: 0; height: 100%; width: 100%; 
-            background-color: var(--bg-color);
-            font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
-            /* Centre le smartphone sur l'écran */
-            display: flex; align-items: center; justify-content: center;
-            overflow: hidden;
-            -webkit-font-smoothing: antialiased;
-        }
+    #phone-shell { 
+        height: 85vh; aspect-ratio: 9 / 19; background: var(--phone); 
+        border: 12px solid #1a1a1a; border-radius: 40px; 
+        position: relative; overflow: hidden; 
+    }
 
-        #phone-shell { 
-            height: 85vh; 
-            aspect-ratio: 9 / 19; 
-            background: var(--phone-bg); 
-            border: 10px solid #1a1a1a; 
-            border-radius: 40px; 
-            position: relative; 
-            overflow: hidden; 
-            box-shadow: 0 20px 60px rgba(0,0,0,0.7); 
-        }
+    #viewport-y { height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; }
+    #viewport-y::-webkit-scrollbar { display: none; }
 
-        #viewport-y { height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; }
-        #viewport-y::-webkit-scrollbar { display: none; }
+    .slide { 
+        min-width: 100%; height: 100%; scroll-snap-align: start; 
+        padding: 80px 30px 40px 30px; box-sizing: border-box; /* Padding haut pour laisser la place à la flèche */
+        color: var(--text); font-size: 18px; line-height: 1.6;
+        display: flex; flex-direction: column; 
+        justify-content: flex-start; text-align: left; /* Aligné en haut à gauche */
+    }
 
-        .row-container { height: 100%; width: 100%; scroll-snap-align: start; position: relative; }
-        .viewport-x { display: flex; height: 100%; overflow-x: scroll; scroll-snap-type: x mandatory; scrollbar-width: none; }
-        .viewport-x::-webkit-scrollbar { display: none; }
+    /* FLÈCHES FIXES ET RONDES */
+    .nav-arrow { 
+        position: absolute !important; background: rgba(240,240,240,0.8); border: none; 
+        width: 44px; height: 44px; border-radius: 50%; cursor: pointer; 
+        display: none; align-items: center; justify-content: center; z-index: 100;
+        font-size: 20px; transition: 0.2s;
+    }
+    .nav-arrow.visible { display: flex; }
+    .nav-arrow:hover { background: #eee; transform: scale(1.1); }
 
-        /* ALIGNEMENT DU TEXTE EN HAUT À GAUCHE DANS LA SLIDE */
-      .slide { 
-    display: flex; 
-    flex-direction: column; 
-    justify-content: flex-start; /* Texte en haut */
-    text-align: left; /* Texte à gauche */
-    padding: 60px 30px; /* Marge de confort */
-}
-
-.nav-arrow { 
-    position: absolute !important; /* Fixe sur l'écran du smartphone */
-    width: 40px;
-    height: 40px;
-    padding: 0 !important;
-    margin: 0 !important; /* Supprime le décalage au survol */
-}
-/* On empêche tout mouvement au survol, juste un léger zoom si tu veux */
-.nav-arrow:hover { 
-    background: #ffffff;
-    transform: translate(-50%, 0) scale(1.05); /* Pour les flèches haut/bas */
-}
-
-.nav-arrow.visible { 
-    display: flex; 
-}
-
-/* Positionnement strict aux 4 points cardinaux */
-.arrow-up { 
-    top: 15px; 
-    left: 50%; 
-    transform: translateX(-50%); 
-}
-
-.arrow-down { 
-    bottom: 15px; 
-    left: 50%; 
-    transform: translateX(-50%); 
-}
-
-.arrow-left { 
-    left: 10px; 
-    top: 50%; 
-    transform: translateY(-50%); 
-}
-
-/* Correction spécifique pour la flèche droite pour éviter le décalage */
-.arrow-right { 
-    right: 10px; 
-    top: 50%; 
-    transform: translateY(-50%); 
-}
-
-        .ai-loading { color: var(--text-muted); font-style: italic; font-size: 14px; margin-top: 20px; }
-    </style>
+    .arrow-up { top: 20px; left: 50%; transform: translateX(-50%); }
+    .arrow-down { bottom: 20px; left: 50%; transform: translateX(-50%); }
+    .arrow-left { left: 15px; top: 50%; transform: translateY(-50%); }
+    .arrow-right { right: 15px; top: 50%; transform: translateY(-50%); }
+</style>
 </head>
 <body>
 
