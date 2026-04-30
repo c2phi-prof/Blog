@@ -40,37 +40,21 @@
         .viewport-x::-webkit-scrollbar { display: none; }
 
         /* ALIGNEMENT DU TEXTE EN HAUT À GAUCHE DANS LA SLIDE */
-        .slide { 
-            min-width: 100%; height: 100%; scroll-snap-align: start; 
-            padding: 50px 35px; box-sizing: border-box; 
-            color: var(--text-main); 
-            font-size: 17px; line-height: 1.6;
-            /* Aligne le contenu en haut à gauche */
-            display: flex; flex-direction: column; 
-            justify-content: flex-start; 
-            text-align: left;
-            overflow-y: auto;
-        }
-
-    /* NAVIGATION DISCRÈTE ET FIXE */
-.nav-arrow { 
-    position: absolute; 
-    background: rgba(255, 255, 255, 0.9); 
-    border: none; 
-    width: 40px; 
-    height: 40px; 
-    border-radius: 50%;
-    cursor: pointer; 
-    display: none; /* Caché par défaut */
-    align-items: center; 
-    justify-content: center; 
-    z-index: 100; 
-    font-size: 20px; 
-    color: #333; 
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    transition: opacity 0.2s, transform 0.2s;
+      .slide { 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: flex-start; /* Texte en haut */
+    text-align: left; /* Texte à gauche */
+    padding: 60px 30px; /* Marge de confort */
 }
 
+.nav-arrow { 
+    position: absolute !important; /* Fixe sur l'écran du smartphone */
+    width: 40px;
+    height: 40px;
+    padding: 0 !important;
+    margin: 0 !important; /* Supprime le décalage au survol */
+}
 /* On empêche tout mouvement au survol, juste un léger zoom si tu veux */
 .nav-arrow:hover { 
     background: #ffffff;
