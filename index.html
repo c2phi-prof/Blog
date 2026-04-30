@@ -4,93 +4,25 @@
     <meta charset="UTF-8">
     <title>Labyrinthe Panoptique</title>
     <style>
-        :root { 
-            --bg: #0a0a0a; 
-            --phone: #ffffff; 
-            --text: #1a1a1a; 
-        }
-        
-        body, html { 
-            margin: 0; padding: 0; height: 100%; width: 100%; 
-            background: var(--bg); display: flex; align-items: center; justify-content: center; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-
-        #phone-shell { 
-            height: 85vh; aspect-ratio: 9 / 19; background: var(--phone); 
-            border: 12px solid #1a1a1a; border-radius: 40px; 
-            position: relative; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-
-        #viewport-y {
-            height: 100%;
-            overflow-y: auto;
-            scroll-snap-type: y mandatory;
-            scrollbar-width: none;
-        }
+        :root { --bg: #0a0a0a; --phone: #ffffff; --text: #1a1a1a; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg); display: flex; align-items: center; justify-content: center; font-family: sans-serif; }
+        #phone-shell { height: 85vh; aspect-ratio: 9 / 19; background: var(--phone); border: 12px solid #1a1a1a; border-radius: 40px; position: relative; overflow: hidden; }
+        #viewport-y { height: 100%; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; }
         #viewport-y::-webkit-scrollbar { display: none; }
-
-        .row-container {
-            display: flex;
-            width: 100%;
-            height: 100%;
-            position: relative;
-        }
-
-        .viewport-x {
-            display: flex;
-            overflow-x: auto;
-            scroll-snap-type: x mandatory;
-            width: 100%;
-            height: 100%;
-            scrollbar-width: none;
-        }
+        .row-container { display: flex; width: 100%; height: 100%; position: relative; }
+        .viewport-x { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; width: 100%; height: 100%; scrollbar-width: none; }
         .viewport-x::-webkit-scrollbar { display: none; }
-
-        .slide { 
-            min-width: 100%;
-            height: 100%;
-            scroll-snap-align: start;
-            flex-shrink: 0;
-            display: flex; 
-            flex-direction: column; 
-            justify-content: flex-start; 
-            text-align: left; 
-            padding: 100px 35px 40px 35px; 
-            box-sizing: border-box;
-            color: var(--text);
-            font-size: 1.1rem;
-            line-height: 1.5;
-        }
-
-        .nav-arrow { 
-            position: absolute !important; 
-            width: 44px; 
-            height: 44px; 
-            border-radius: 50%; 
-            background: rgba(255, 255, 255, 0.9);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-            border: 1px solid #ddd;
-            z-index: 1000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 1.2rem;
-        }
-
+        .slide { min-width: 100%; height: 100%; scroll-snap-align: start; flex-shrink: 0; display: flex; flex-direction: column; padding: 100px 35px; box-sizing: border-box; color: var(--text); }
+        .nav-arrow { position: absolute !important; width: 44px; height: 44px; border-radius: 50%; background: rgba(255, 255, 255, 0.9); border: 1px solid #ddd; z-index: 1000; display: none; align-items: center; justify-content: center; cursor: pointer; }
         .nav-arrow.visible { display: flex; }
-
         .arrow-up { top: 20px; left: 50%; transform: translateX(-50%); }
         .arrow-down { bottom: 20px; left: 50%; transform: translateX(-50%); }
         .arrow-left { left: 15px; top: 50%; transform: translateY(-50%); }
         .arrow-right { right: 15px; top: 50%; transform: translateY(-50%); }
-
         .ai-loading { color: #888; font-style: italic; }
     </style>
 </head>
 <body>
-
     <div id="phone-shell">
         <button id="v-up" class="nav-arrow arrow-up" onclick="moveV(-1)">↑</button>
         <button id="v-down" class="nav-arrow arrow-down" onclick="moveV(1)">↓</button>
@@ -106,44 +38,33 @@
         const el = document.getElementById(elementId);
         try {
             el.innerHTML = '<span class="ai-loading">Le Sphinx réfléchit...</span>';
-            
-            const response = await fetch(`${PROXY_URL}?prompt=${encodeURIComponent(prompt)}`, {
-                method: 'GET',
-                mode: 'cors',
-                cache: 'no-cache'
-            });
-
-            if (!response.ok) throw new Error("Réseau KO");
-
+            const response = await fetch(`${PROXY_URL}?prompt=${encodeURIComponent(prompt)}`);
             const text = await response.text();
-            
-            if (!text || text.includes("error")) throw new Error("API KO");
-
-            el.innerHTML = text;
-        } catch (e) {
-            console.error("Erreur IA:", e);
-            el.innerHTML = "Le Sphinx est fatigué, cliquez sur une flèche pour réessayer.";
-        }
+            el.innerHTML = text.includes("error") ? "Le Sphinx est fatigué." : text;
+        } catch (e) { el.innerHTML = "Le Sphinx est fatigué."; }
     }
 
     async function load() {
         try {
             const res = await fetch(PROXY_URL);
-            globalMatrix = await res.json();
+            const data = await res.json();
+            // Sécurité : on s'assure que c'est bien un tableau
+            globalMatrix = Array.isArray(data) ? data : (data.models ? [] : []); 
+            if (globalMatrix.length === 0) {
+                document.getElementById('viewport-y').innerHTML = "<div class='slide'>Labyrinthe vide ou erreur de matrice.</div>";
+                return;
+            }
             render();
-        } catch (e) {
-            console.error("Erreur de chargement", e);
-        }
+        } catch (e) { console.error("Erreur de chargement", e); }
     }
 
     function render() {
         const phone = document.getElementById('viewport-y');
         phone.innerHTML = "";
-        
         globalMatrix.forEach((row, rIdx) => {
+            if (!Array.isArray(row)) return; // Saute les lignes corrompues
             const rowBlock = document.createElement('div');
             rowBlock.className = 'row-container';
-            
             const sliderX = document.createElement('div');
             sliderX.className = 'viewport-x';
             
@@ -152,11 +73,8 @@
                 slide.className = 'slide';
                 const sId = `s-${rIdx}-${cIdx}`;
                 slide.id = sId;
-                slide.dataset.r = rIdx; 
-                slide.dataset.c = cIdx;
-                
+                slide.dataset.r = rIdx; slide.dataset.c = cIdx;
                 let content = cell ? cell.toString().trim() : "";
-
                 if (content.startsWith("[AI_TEXT]")) {
                     slide.innerHTML = `<div id="ai-${sId}"></div>`;
                     askGemini(content.replace("[AI_TEXT]", ""), `ai-${sId}`);
@@ -166,12 +84,9 @@
                 sliderX.appendChild(slide);
             });
 
-            const bL = document.createElement('button'); 
-            bL.id = `arr-l-${rIdx}`; bL.className='nav-arrow arrow-left'; bL.innerHTML='‹';
+            const bL = document.createElement('button'); bL.id = `arr-l-${rIdx}`; bL.className='nav-arrow arrow-left'; bL.innerHTML='‹';
             bL.onclick = () => moveH(-1);
-
-            const bR = document.createElement('button'); 
-            bR.id = `arr-r-${rIdx}`; bR.className='nav-arrow arrow-right'; bR.innerHTML='›';
+            const bR = document.createElement('button'); bR.id = `arr-r-${rIdx}`; bR.className='nav-arrow arrow-right'; bR.innerHTML='›';
             bR.onclick = () => moveH(1);
 
             rowBlock.append(bL, bR, sliderX);
@@ -180,15 +95,8 @@
         setupObs();
     }
 
-    function moveV(dir) {
-        const target = document.getElementById(`s-${curR+dir}-${curC}`);
-        if(target) target.scrollIntoView({behavior:'smooth'});
-    }
-
-    function moveH(dir) {
-        const target = document.getElementById(`s-${curR}-${curC+dir}`);
-        if(target) target.scrollIntoView({behavior:'smooth'});
-    }
+    function moveV(dir) { const t = document.getElementById(`s-${curR+dir}-${curC}`); if(t) t.scrollIntoView({behavior:'smooth'}); }
+    function moveH(dir) { const t = document.getElementById(`s-${curR}-${curC+dir}`); if(t) t.scrollIntoView({behavior:'smooth'}); }
 
     function setupObs() {
         const obs = new IntersectionObserver((entries) => {
@@ -207,7 +115,6 @@
         const check = (r, c) => globalMatrix[r] && globalMatrix[r][c] && globalMatrix[r][c].toString().trim();
         document.getElementById('v-up').classList.toggle('visible', !!check(curR-1, curC));
         document.getElementById('v-down').classList.toggle('visible', !!check(curR+1, curC));
-        
         document.querySelectorAll('.arrow-left, .arrow-right').forEach(a => a.classList.remove('visible'));
         const al = document.getElementById(`arr-l-${curR}`);
         const ar = document.getElementById(`arr-r-${curR}`);
