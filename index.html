@@ -3,51 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <title>Labyrinthe Panoptique</title>
-  <style>
-    :root { 
-        --bg: #0a0a0a; 
-        --phone: #ffffff; 
-        --text: #1a1a1a; 
-    }
-    
-    body, html { 
-        margin: 0; padding: 0; height: 100%; width: 100%; 
-        background: var(--bg); display: flex; align-items: center; justify-content: center; 
-    }
+    <style>
+        :root { 
+            --bg: #0a0a0a; 
+            --phone: #ffffff; 
+            --text: #1a1a1a; 
+        }
+        
+        body, html { 
+            margin: 0; padding: 0; height: 100%; width: 100%; 
+            background: var(--bg); display: flex; align-items: center; justify-content: center; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
 
-    #phone-shell { 
-        height: 85vh; aspect-ratio: 9 / 19; background: var(--phone); 
-        border: 12px solid #1a1a1a; border-radius: 40px; 
-        position: relative; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-    }
+        #phone-shell { 
+            height: 85vh; aspect-ratio: 9 / 19; background: var(--phone); 
+            border: 12px solid #1a1a1a; border-radius: 40px; 
+            position: relative; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
 
-    /* ZONE DE TEXTE ALIGNÉE EN HAUT À GAUCHE */
-    .slide { 
-    display: flex; 
-    flex-direction: column; 
-    justify-content: flex-start; /* Texte en haut */
-    text-align: left; /* Texte à gauche */
-    padding: 85px 35px 40px 35px; /* Espace pour la flèche du haut */
-    box-sizing: border-box;
-}
+        /* CONTENEUR DE SCROLL VERTICAL */
+        #viewport-y {
+            height: 100%;
+            overflow-y: auto;
+            scroll-snap-type: y mandatory;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE/Edge */
+        }
+        #viewport-y::-webkit-scrollbar { display: none; } /* Chrome/Safari */
 
-.nav-arrow { 
-    position: absolute !important; /* Fixe sur la vitre du smartphone */
-    width: 44px; 
-    height: 44px; 
-    border-radius: 50%; /* Boutons ronds */
-    background: rgba(255, 255, 255, 0.9);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    margin: 0 !important; /* Supprime le mouvement au survol */
-    padding: 0 !important;
-}
+        /* CONTENEUR DE LIGNE (HORIZONTAL) */
+        .row-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
 
-/* Positionnement strict */
-.arrow-up { top: 20px; left: 50%; transform: translateX(-50%); }
-.arrow-down { bottom: 20px; left: 50%; transform: translateX(-50%); }
-.arrow-left { left: 15px; top: 50%; transform: translateY(-50%); }
-.arrow-right { right: 15px; top: 50%; transform: translateY(-50%); }
-</style>
+        .viewport-x {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            width: 100%;
+            height: 100%;
+            scrollbar-width: none;
+        }
+        .viewport-x::-webkit-scrollbar { display: none; }
+
+        /* ZONE DE TEXTE ALIGNÉE EN HAUT À GAUCHE */
+        .slide { 
+            min-width: 100%;
+            height: 100%;
+            scroll-snap-align: start;
+            flex-shrink: 0;
+            display: flex; 
+            flex-direction: column; 
+            justify-content: flex-start; 
+            text-align: left; 
+            padding: 100px 35px 40px 35px; 
+            box-sizing: border-box;
+            color: var(--text);
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+
+        /* FLÈCHES DE NAVIGATION */
+        .nav-arrow { 
+            position: absolute !important; 
+            width: 44px; 
+            height: 44px; 
+            border-radius: 50%; 
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            border: 1px solid #ddd;
+            margin: 0 !important;
+            padding: 0 !important;
+            z-index: 1000;
+            display: none; /* Caché par défaut */
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: background 0.2s;
+        }
+
+        .nav-arrow:hover { background: #fff; }
+        .nav-arrow.visible { display: flex; }
+
+        /* POSITIONNEMENT STRICT */
+        .arrow-up { top: 20px; left: 50%; transform: translateX(-50%); }
+        .arrow-down { bottom: 20px; left: 50%; transform: translateX(-50%); }
+        .arrow-left { left: 15px; top: 50%; transform: translateY(-50%); }
+        .arrow-right { right: 15px; top: 50%; transform: translateY(-50%); }
+
+        .ai-loading { color: #888; font-style: italic; }
+    </style>
 </head>
 <body>
 
@@ -89,6 +139,7 @@
         globalMatrix.forEach((row, rIdx) => {
             const rowBlock = document.createElement('div');
             rowBlock.className = 'row-container';
+            
             const sliderX = document.createElement('div');
             sliderX.className = 'viewport-x';
             
@@ -97,7 +148,8 @@
                 slide.className = 'slide';
                 const sId = `s-${rIdx}-${cIdx}`;
                 slide.id = sId;
-                slide.dataset.r = rIdx; slide.dataset.c = cIdx;
+                slide.dataset.r = rIdx; 
+                slide.dataset.c = cIdx;
                 
                 let content = cell ? cell.toString().trim() : "";
 
@@ -110,11 +162,17 @@
                 sliderX.appendChild(slide);
             });
 
-            // Flèches de navigation horizontale
-            const bL = document.createElement('button'); bL.id = `arr-l-${rIdx}`; bL.className='nav-arrow arrow-left'; bL.innerHTML='‹';
-            bL.onclick = () => document.getElementById(`s-${rIdx}-${curC-1}`).scrollIntoView({behavior:'smooth'});
-            const bR = document.createElement('button'); bR.id = `arr-r-${rIdx}`; bR.className='nav-arrow arrow-right'; bR.innerHTML='›';
-            bR.onclick = () => document.getElementById(`s-${rIdx}-${curC+1}`).scrollIntoView({behavior:'smooth'});
+            const bL = document.createElement('button'); 
+            bL.id = `arr-l-${rIdx}`; 
+            bL.className='nav-arrow arrow-left'; 
+            bL.innerHTML='‹';
+            bL.onclick = () => moveH(-1);
+
+            const bR = document.createElement('button'); 
+            bR.id = `arr-r-${rIdx}`; 
+            bR.className='nav-arrow arrow-right'; 
+            bR.innerHTML='›';
+            bR.onclick = () => moveH(1);
 
             rowBlock.append(bL, bR, sliderX);
             phone.appendChild(rowBlock);
@@ -124,6 +182,11 @@
 
     function moveV(dir) {
         const target = document.getElementById(`s-${curR+dir}-${curC}`);
+        if(target) target.scrollIntoView({behavior:'smooth'});
+    }
+
+    function moveH(dir) {
+        const target = document.getElementById(`s-${curR}-${curC+dir}`);
         if(target) target.scrollIntoView({behavior:'smooth'});
     }
 
@@ -142,9 +205,12 @@
 
     function updateUI() {
         const check = (r, c) => globalMatrix[r] && globalMatrix[r][c] && globalMatrix[r][c].toString().trim();
+        
+        // Flèches verticales
         document.getElementById('v-up').classList.toggle('visible', !!check(curR-1, curC));
         document.getElementById('v-down').classList.toggle('visible', !!check(curR+1, curC));
         
+        // Flèches horizontales
         document.querySelectorAll('.arrow-left, .arrow-right').forEach(a => a.classList.remove('visible'));
         const al = document.getElementById(`arr-l-${curR}`);
         const ar = document.getElementById(`arr-r-${curR}`);
