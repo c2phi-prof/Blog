@@ -51,68 +51,79 @@
     let globalMatrix = [];
     let curR = 0, curC = 0;
 
-    async function load() {
+ async function load() {
+    try {
         const res = await fetch(PROXY_URL);
-        globalMatrix = await res.json();
+        const data = await res.json();
+        
+        // Sécurité : Si Google renvoie un objet bizarre, on s'assure d'avoir un tableau
+        globalMatrix = Array.isArray(data) ? data : []; 
+        
+        // On vide l'écran avant de dessiner
+        document.getElementById('viewport-y').innerHTML = "";
+        document.getElementById('plan-list').innerHTML = "";
+        
         render();
+    } catch (e) {
+        console.error("Erreur de chargement : ", e);
+        document.getElementById('viewport-y').innerHTML = "<div class='slide'>Erreur de connexion aux données.</div>";
     }
+}
 
-    // Fonction pour appeler Gemini via Apps Script
-    async function askGemini(prompt, elementId) {
-        try {
-            const res = await fetch(PROXY_URL + "?prompt=" + encodeURIComponent(prompt));
-            const text = await res.text();
-            document.getElementById(elementId).innerHTML = text;
-        } catch (e) {
-            document.getElementById(elementId).innerHTML = "Erreur de connexion avec l'IA.";
-        }
-    }
+function render() {
+    const phone = document.getElementById('viewport-y');
+    const plan = document.getElementById('plan-list');
 
-    function render() {
-        const phone = document.getElementById('viewport-y');
-        const plan = document.getElementById('plan-list');
-        globalMatrix.forEach((row, rIdx) => {
-            const rowBlock = document.createElement('div');
-            rowBlock.className = 'row-container';
-            const sliderX = document.createElement('div');
-            sliderX.className = 'viewport-x';
+    globalMatrix.forEach((row, rIdx) => {
+        const rowBlock = document.createElement('div');
+        rowBlock.className = 'row-container';
+        const sliderX = document.createElement('div');
+        sliderX.className = 'viewport-x';
+        sliderX.id = `slider-x-${rIdx}`;
+        
+        row.forEach((cell, cIdx) => {
+            const slide = document.createElement('div');
+            slide.className = 'slide';
+            const sId = `s-${rIdx}-${cIdx}`;
+            slide.id = sId;
+            slide.dataset.r = rIdx; 
+            slide.dataset.c = cIdx;
             
-            row.forEach((cell, cIdx) => {
-                const slide = document.createElement('div');
-                slide.className = 'slide';
-                const sId = `s-${rIdx}-${cIdx}`;
-                slide.id = sId;
-                slide.dataset.r = rIdx; slide.dataset.c = cIdx;
-                
-                if (cell && cell.toString().startsWith("[AI_TEXT]")) {
-                    slide.innerHTML = `<div id="ai-${sId}" class="ai-loading">L'IA réfléchit...</div>`;
-                    // On lance l'appel IA juste après le rendu
-                    askGemini(cell.toString().replace("[AI_TEXT]", ""), `ai-${sId}`);
-                } else {
-                    slide.innerHTML = `<div>${cell || ""}</div>`;
-                }
-                
-                sliderX.appendChild(slide);
-                if (cell) {
-                    const item = document.createElement('div');
-                    item.className = 'nav-item';
-                    item.id = `link-s-${rIdx}-${cIdx}`;
-                    item.innerText = `[${rIdx}:${cIdx}] ${cell.toString().substring(0,15)}`;
-                    plan.appendChild(item);
-                }
-            });
+            let content = cell ? cell.toString().trim() : "";
 
-            const bL = document.createElement('button'); bL.id = `arr-l-${rIdx}`; bL.className='nav-arrow arrow-left'; bL.innerText='‹';
-            bL.onclick = () => document.getElementById(`s-${rIdx}-${curC-1}`).scrollIntoView({behavior:'smooth'});
-            const bR = document.createElement('button'); bR.id = `arr-r-${rIdx}`; bR.className='nav-arrow arrow-right'; bR.innerText='›';
-            bR.onclick = () => document.getElementById(`s-${rIdx}-${curC+1}`).scrollIntoView({behavior:'smooth'});
+            if (content.startsWith("[AI_TEXT]")) {
+                const prompt = content.replace("[AI_TEXT]", "").trim();
+                slide.innerHTML = `<div id="ai-${sId}" class="ai-loading">L'IA explore pour vous...</div>`;
+                askGemini(prompt, `ai-${sId}`);
+            } else {
+                slide.innerHTML = `<div>${content}</div>`;
+            }
+            
+            sliderX.appendChild(slide);
 
-            rowBlock.append(bL, bR, sliderX);
-            phone.appendChild(rowBlock);
+            // Ajout au plan seulement si la cellule n'est pas vide
+            if (content !== "") {
+                const item = document.createElement('div');
+                item.className = 'nav-item';
+                item.id = `link-s-${rIdx}-${cIdx}`;
+                item.innerText = content.substring(0, 20);
+                item.onclick = () => document.getElementById(sId).scrollIntoView({behavior:'smooth'});
+                plan.appendChild(item);
+            }
         });
-        setupObs();
-    }
 
+        // Flèches de navigation
+        const bL = document.createElement('button'); bL.id = `arr-l-${rIdx}`; bL.className='nav-arrow arrow-left'; bL.innerText='‹';
+        bL.onclick = () => document.getElementById(`s-${rIdx}-${curC-1}`).scrollIntoView({behavior:'smooth'});
+
+        const bR = document.createElement('button'); bR.id = `arr-r-${rIdx}`; bR.className='nav-arrow arrow-right'; bR.innerText='›';
+        bR.onclick = () => document.getElementById(`s-${rIdx}-${curC+1}`).scrollIntoView({behavior:'smooth'});
+
+        rowBlock.append(bL, bR, sliderX);
+        phone.appendChild(rowBlock);
+    });
+    setupObs();
+}
     function moveV(dir) {
         const target = document.getElementById(`s-${curR+dir}-${curC}`);
         if(target) target.scrollIntoView({behavior:'smooth'});
