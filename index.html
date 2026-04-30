@@ -51,22 +51,22 @@
     let globalMatrix = [];
     let curR = 0, curC = 0;
 
- async function load() {
+async function load() {
     try {
         const res = await fetch(PROXY_URL);
         const data = await res.json();
         
-        // Sécurité : Si Google renvoie un objet bizarre, on s'assure d'avoir un tableau
+        // On s'assure que globalMatrix est bien un tableau de tableaux
         globalMatrix = Array.isArray(data) ? data : []; 
         
-        // On vide l'écran avant de dessiner
+        // Nettoyage impératif de l'écran avant de dessiner
         document.getElementById('viewport-y').innerHTML = "";
         document.getElementById('plan-list').innerHTML = "";
         
         render();
     } catch (e) {
-        console.error("Erreur de chargement : ", e);
-        document.getElementById('viewport-y').innerHTML = "<div class='slide'>Erreur de connexion aux données.</div>";
+        console.error("Erreur critique : ", e);
+        document.getElementById('viewport-y').innerHTML = "<div class='slide'>Impossible de charger le labyrinthe.</div>";
     }
 }
 
@@ -89,30 +89,31 @@ function render() {
             slide.dataset.r = rIdx; 
             slide.dataset.c = cIdx;
             
-            let content = cell ? cell.toString().trim() : "";
+            // On traite le contenu de la cellule
+            let cellText = cell ? cell.toString().trim() : "";
 
-            if (content.startsWith("[AI_TEXT]")) {
-                const prompt = content.replace("[AI_TEXT]", "").trim();
-                slide.innerHTML = `<div id="ai-${sId}" class="ai-loading">L'IA explore pour vous...</div>`;
+            if (cellText.startsWith("[AI_TEXT]")) {
+                const prompt = cellText.replace("[AI_TEXT]", "").trim();
+                slide.innerHTML = `<div id="ai-${sId}" class="ai-loading">L'IA tisse le récit...</div>`;
                 askGemini(prompt, `ai-${sId}`);
             } else {
-                slide.innerHTML = `<div>${content}</div>`;
+                slide.innerHTML = `<div>${cellText}</div>`;
             }
             
             sliderX.appendChild(slide);
 
-            // Ajout au plan seulement si la cellule n'est pas vide
-            if (content !== "") {
+            // Ajout au plan (seulement si la cellule n'est pas vide)
+            if (cellText !== "") {
                 const item = document.createElement('div');
                 item.className = 'nav-item';
                 item.id = `link-s-${rIdx}-${cIdx}`;
-                item.innerText = content.substring(0, 20);
+                item.innerText = cellText.substring(0, 20);
                 item.onclick = () => document.getElementById(sId).scrollIntoView({behavior:'smooth'});
                 plan.appendChild(item);
             }
         });
 
-        // Flèches de navigation
+        // Flèches de navigation spécifiques à la ligne
         const bL = document.createElement('button'); bL.id = `arr-l-${rIdx}`; bL.className='nav-arrow arrow-left'; bL.innerText='‹';
         bL.onclick = () => document.getElementById(`s-${rIdx}-${curC-1}`).scrollIntoView({behavior:'smooth'});
 
