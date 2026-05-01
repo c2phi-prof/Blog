@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LabyBlog v4.2.3 - Vitesse Absolue (Opportunistic Loader)</title>
+    <title>LabyBlog v4.2.5 - Rétro-Matriçage Batch</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700&family=Inter:wght@300;400&display=swap" rel="stylesheet">
     <style>
@@ -30,7 +30,13 @@
         #matrix-minimap { display: grid; gap: 1px; background: #eee; border: 1px solid #bbb; padding: 2px; width: 40px; height: 40px; }
         .map-dot { width: 100%; height: 100%; background-color: #fff; }
         .map-dot.occupied { background-color: #777; cursor: pointer; }
-        .tool-btn { width: 40px; height: 40px; background: #fff; border: 1px solid #bbb; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #777; font-size: 1.2rem; }
+        .tool-btn { width: 40px; height: 40px; background: #fff; border: 1px solid #bbb; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #777; font-size: 1.2rem; transition: all 0.3s ease; }
+        
+        @keyframes pulse-blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        .btn-processing { animation: pulse-blink 0.5s infinite !important; color: #f39c12 !important; pointer-events: none; }
+        .btn-success { color: #27ae60 !important; border-color: #27ae60 !important; }
+        .btn-error { color: #e74c3c !important; border-color: #e74c3c !important; }
+
         #outline-content { display: flex; flex-direction: column; gap: 2px; }
         .outline-item { cursor: pointer; padding: 8px 12px; border-left: 3px solid #ddd; background-color: #f0f0f0; font-size: 0.65rem; color: #444; }
         .content { width: 100%; line-height: 1.4; font-size: 1.2rem; }
@@ -55,7 +61,7 @@
         <div class="header-tools" style="display:flex; gap:10px;">
             <button class="tool-btn" title="Exporter JSON" onclick="exportAndCopy()">⭳</button>
             <button class="tool-btn" title="Importer JSON" onclick="smartImport()">⭱</button>
-            <button class="tool-btn" title="Rétro-Matriçage" onclick="exportToSheet()">◈</button>
+            <button class="tool-btn" id="btn-retro" title="Rétro-Matriçage" onclick="exportToSheet(event)">◈</button>
             <input type="file" id="import-input" style="display:none" onchange="importMatrixFile(event)">
         </div>
     </div>
@@ -70,7 +76,7 @@
 <div id="main-container"></div>
 
 <script>
-    const HTML_VERSION = "4.2.3";
+    const HTML_VERSION = "4.2.5";
     const PROXY_URL = "https://script.google.com/macros/s/AKfycbyh6DHFtArE5EhPoz3bC9nwp_Fbuv4q_AA-7ICpl8LUMnAJiUrWqc6B_BQDNrVYCtLskQ/exec";
     let globalMatrix = [], currentSheetName = "", currentR = 0, currentC = 0;
     let clickCount = 0, clickTimer = null, arrowTimer = null, lastTapTime = 0;
@@ -82,19 +88,13 @@
         const bar = document.getElementById('progress-line');
         const sLeft = document.getElementById('slot-left');
         const sRight = document.getElementById('slot-right');
-
-        loader.style.display = 'flex';
-        loader.style.opacity = '1';
-        bar.style.width = "10%";
-        sLeft.innerText = "";
+        loader.style.display = 'flex'; loader.style.opacity = '1';
+        bar.style.width = "10%"; sLeft.innerText = "";
 
         try {
             const url = name ? `${PROXY_URL}?sheet=${encodeURIComponent(name)}` : PROXY_URL;
             const res = await fetch(url);
-            bar.style.width = "40%";
             const data = await res.json();
-            
-            // --- MOTEUR D'EXTRACTION OPPORTUNISTE ---
             const rawText = JSON.stringify(data).replace(/[^a-zA-ZÀ-ÿ]/g, ' ');
             const tokens = rawText.split(/\s+/).filter(t => t.length > 4);
             let i = 0;
@@ -106,26 +106,16 @@
                 }
             }, 50);
 
-            // --- RENDU IMMÉDIAT ---
             processData(data);
-            
-            // --- FINALISATION SANS DÉLAI ---
             clearInterval(flash);
             bar.style.width = "100%";
             sLeft.innerText = "" + data.sheetName.toUpperCase();
             sRight.innerText = "" + data.version;
-
-            // Disparition ultra-rapide (200ms)
             loader.style.opacity = '0';
-            setTimeout(() => {
-                loader.style.display = 'none';
-            }, 200);
-
+            setTimeout(() => { loader.style.display = 'none'; }, 200);
             if(!name) window.jumpTo(0, 0);
         } catch (e) { 
-            console.error(e);
-            sLeft.innerText = "ERR";
-            sRight.innerText = "CONX";
+            sLeft.innerText = "ERR"; sRight.innerText = "CONX";
             setTimeout(() => { loader.style.display = 'none'; }, 1000);
         }
     }
@@ -133,8 +123,7 @@
     function processData(data) {
         currentSheetName = data.sheetName;
         globalMatrix = data.matrix;
-        render(); 
-        buildOutline();
+        render(); buildOutline();
     }
 
     function render() {
@@ -147,18 +136,15 @@
                     slide.className = 'slide';
                     if (rIdx === currentR && cIdx === currentC) slide.classList.add('active');
                     slide.id = `s-${rIdx}-${cIdx}`;
-                    
                     const contentDiv = document.createElement('div');
                     contentDiv.className = 'content';
                     contentDiv.innerHTML = marked.parse(cell.htmlContent);
-                    
                     slide.style.backgroundColor = cell.backgroundColor;
                     const hA = (cell.horizontalAlignment || "").toUpperCase();
                     const vA = (cell.verticalAlignment || "").toUpperCase();
                     slide.style.justifyContent = hA.includes("CENTER") ? "center" : hA.includes("RIGHT") ? "flex-end" : "flex-start";
                     slide.style.alignItems = vA.includes("MIDDLE") ? "center" : vA.includes("BOTTOM") ? "flex-end" : "flex-start";
                     contentDiv.style.textAlign = hA.includes("CENTER") ? "center" : hA.includes("RIGHT") ? "right" : "left";
-                    
                     slide.appendChild(contentDiv);
                     container.appendChild(slide);
                 }
@@ -213,11 +199,8 @@
         const blob = new Blob([dataStr], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
-        link.href = url;
-        link.download = `Matrice_${currentSheetName}.json`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        link.href = url; link.download = `Matrice_${currentSheetName}.json`;
+        document.body.appendChild(link); link.click(); document.body.removeChild(link);
     }
 
     function smartImport() { document.getElementById('import-input').click(); }
@@ -229,18 +212,33 @@
         reader.onload = (e) => {
             try {
                 const data = JSON.parse(e.target.result);
-                processData(data);
-                window.jumpTo(0, 0);
+                processData(data); window.jumpTo(0, 0);
             } catch (err) { alert("Erreur JSON"); }
         };
         reader.readAsText(file);
     }
 
-    async function exportToSheet() {
+    async function exportToSheet(e) {
+        const btn = e.currentTarget;
+        const originalText = btn.innerText;
+        btn.classList.add('btn-processing');
         try {
-            await fetch(PROXY_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ sheetName: currentSheetName, matrix: globalMatrix }) });
-            alert("Rétro-Matriçage lancé.");
-        } catch (e) { alert("Erreur"); }
+            await fetch(PROXY_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                body: JSON.stringify({ matrix: globalMatrix }) 
+            });
+            await new Promise(r => setTimeout(r, 1500));
+            btn.classList.remove('btn-processing');
+            btn.classList.add('btn-success');
+            btn.innerText = "✔";
+            setTimeout(() => { btn.classList.remove('btn-success'); btn.innerText = originalText; }, 2000);
+        } catch (err) {
+            btn.classList.remove('btn-processing');
+            btn.classList.add('btn-error');
+            btn.innerText = "✖";
+            setTimeout(() => { btn.classList.remove('btn-error'); btn.innerText = originalText; }, 2000);
+        }
     }
 
     function buildOutline() {
@@ -266,7 +264,6 @@
             });
         });
     }
-
     load();
 </script>
 </body>
