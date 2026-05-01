@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LabyBlog - Final Mobile</title>
+    <title>LabyBlog - Édition Finale</title>
     <style>
         body, html { 
             margin: 0; padding: 0; height: 100%; width: 100%; 
@@ -17,16 +17,16 @@
             position: absolute; top: 0; left: 0; 
             width: 100vw; height: 100vh; 
             display: none; box-sizing: border-box; 
-            padding: 80px;
-            /* Permet de lire les textes longs sans changer de page */
+            /* Marges réduites mais pas à zéro */
+            padding: 20px; 
             overflow-y: auto; 
-            touch-action: pan-y; /* Autorise le scroll vertical interne sur mobile */
+            touch-action: pan-y; 
         }
 
         .slide.active { display: flex; } 
 
         .nav-arrow { 
-            position: fixed; background: rgba(255, 255, 255, 0.6); 
+            position: fixed; background: rgba(255, 255, 255, 0.5); 
             border: none; font-size: 40px; color: #000000 !important; 
             opacity: 0.2; z-index: 100; display: none; 
             align-items: center; justify-content: center; 
@@ -35,23 +35,25 @@
         
         .nav-arrow.visible { display: flex; }
         
-        .arrow-up { top: 15px; left: 50%; transform: translateX(-50%); }
-        .arrow-down { bottom: 15px; left: 50%; transform: translateX(-50%); }
-        .arrow-left { left: 15px; top: 50%; transform: translateY(-50%); }
-        .arrow-right { right: 15px; top: 50%; transform: translateY(-50%); }
+        .arrow-up { top: 10px; left: 50%; transform: translateX(-50%); }
+        .arrow-down { bottom: 10px; left: 50%; transform: translateX(-50%); }
+        .arrow-left { left: 10px; top: 50%; transform: translateY(-50%); }
+        .arrow-right { right: 10px; top: 50%; transform: translateY(-50%); }
         
         .content { 
-            max-width: 1100px; width: 100%; line-height: 1.6; 
+            width: 100%; 
+            /* Interlignes réduites */
+            line-height: 1.2; 
             font-size: 1.2rem;
-            /* Gestion des sauts de ligne et du texte */
             white-space: pre-wrap; 
             word-wrap: break-word;
+            transition: transform 0.3s ease;
         }
 
         @media (max-width: 768px) {
-            .slide { padding: 80px 25px; }
+            .slide { padding: 15px; }
             .content { font-size: 1.1rem; }
-            .nav-arrow { width: 70px; height: 70px; opacity: 0.4; }
+            .nav-arrow { width: 60px; height: 60px; opacity: 0.4; }
         }
     </style>
 </head>
@@ -65,7 +67,7 @@
 <div id="main-container"></div>
 
 <script>
-    const PROXY_URL = "https://script.google.com/macros/s/AKfycbyh6DHFtArE5EhPoz3bC9nwp_Fbuv4q_AA-7ICpl8LUMnAJiUrWqc6B_BQDNrVYCtLskQ/exec";
+    const PROXY_URL = "VOTRE_URL_SCRIPT_ICI";
     let globalMatrix = [];
     let currentR = 0, currentC = 0;
 
@@ -83,12 +85,11 @@
     function handleGesture(endX, endY) {
         const dx = endX - touchstartX;
         const dy = endY - touchstartY;
-        const threshold = 70; // Sensibilité du swipe
+        const threshold = 70;
 
         if (Math.abs(dx) > Math.abs(dy)) {
             if (Math.abs(dx) > threshold) dx > 0 ? moveDir(0, -1) : moveDir(0, 1);
         } else {
-            // Si le texte est scrollable, on ne change de page que si on est au bord
             const activeSlide = document.querySelector('.slide.active');
             const isAtTop = activeSlide.scrollTop <= 0;
             const isAtBottom = activeSlide.scrollTop + activeSlide.clientHeight >= activeSlide.scrollHeight - 1;
@@ -112,11 +113,12 @@
         const nextR = currentR + r;
         const nextC = currentC + c;
         if (globalMatrix[nextR] && globalMatrix[nextR][nextC]) {
-            document.querySelector('.slide.active').classList.remove('active');
+            const currentActive = document.querySelector('.slide.active');
+            if (currentActive) currentActive.classList.remove('active');
             currentR = nextR; currentC = nextC;
             const nextSlide = document.getElementById(`s-${currentR}-${currentC}`);
             nextSlide.classList.add('active');
-            nextSlide.scrollTop = 0; // Remet le texte en haut lors du changement
+            nextSlide.scrollTop = 0;
             updateArrows(currentR, currentC);
         }
     }
@@ -131,17 +133,30 @@
                     slide.className = 'slide';
                     if (rIdx === 0 && cIdx === 0) slide.classList.add('active');
                     slide.id = `s-${rIdx}-${cIdx}`;
+                    
                     const contentDiv = document.createElement('div');
                     contentDiv.className = 'content';
-                    // Correction des sauts de ligne
+                    // Sauts de ligne du tableur respectés
                     contentDiv.innerHTML = cell.htmlContent.replace(/\n/g, '<br>');
                     
                     slide.style.backgroundColor = cell.backgroundColor;
                     const hA = (cell.horizontalAlignment || "").toUpperCase();
                     const vA = (cell.verticalAlignment || "").toUpperCase();
+                    
                     slide.style.justifyContent = hA.includes("CENTER") ? "center" : hA.includes("RIGHT") ? "flex-end" : "flex-start";
                     slide.style.alignItems = vA.includes("MIDDLE") ? "center" : vA.includes("BOTTOM") ? "flex-end" : "flex-start";
                     contentDiv.style.textAlign = hA.includes("CENTER") ? "center" : hA.includes("RIGHT") ? "right" : "left";
+                    
+                    // Gestion de la rotation
+                    if (cell.rotation) {
+                        contentDiv.style.transform = `rotate(${cell.rotation}deg)`;
+                    }
+
+                    // Logique visuelle basée sur les bordures du tableur
+                    if (cell.borderLogic) {
+                        if (cell.borderLogic.style === "DASHED") contentDiv.style.filter = "blur(3px)";
+                        if (cell.borderLogic.color === "#ff0000") slide.style.boxShadow = "inset 0 0 40px rgba(255,0,0,0.2)";
+                    }
                     
                     slide.appendChild(contentDiv);
                     container.appendChild(slide);
