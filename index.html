@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LabyBlog v4.2.8 - Snappy Cheatcode & Swipe</title>
+    <title>LabyBlog v4.2.9 - Mode Démiurge</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700&family=Inter:wght@300;400&display=swap" rel="stylesheet">
     <style>
@@ -35,7 +35,7 @@
         .btn-processing { animation: pulse-blink 0.5s infinite !important; color: #f39c12 !important; pointer-events: none; }
         .btn-success { color: #27ae60 !important; border-color: #27ae60 !important; }
         .btn-error { color: #e74c3c !important; border-color: #e74c3c !important; }
-        .content { width: 100%; line-height: 1.4; font-size: 1.2rem; }
+        .content { width: 100%; line-height: 1.4; font-size: 1.2rem; outline: none; }
         a { color: inherit; text-decoration: underline; cursor: pointer; }
     </style>
 </head>
@@ -70,7 +70,7 @@
 <div id="main-container"></div>
 
 <script>
-    const HTML_VERSION = "4.2.8";
+    const HTML_VERSION = "4.2.9";
     const PROXY_URL = "https://script.google.com/macros/s/AKfycbyh6DHFtArE5EhPoz3bC9nwp_Fbuv4q_AA-7ICpl8LUMnAJiUrWqc6B_BQDNrVYCtLskQ/exec";
     let globalMatrix = [], currentSheetName = "", currentR = 0, currentC = 0;
     let clickCount = 0, clickTimer = null, arrowTimer = null, lastTapTime = 0;
@@ -78,32 +78,14 @@
 
     marked.setOptions({ gfm: true, breaks: true, sanitize: false });
 
-    // --- GESTION DU SWIPE ---
-    document.addEventListener('touchstart', e => {
-        touchStartX = e.changedTouches[0].screenX;
-        touchStartY = e.changedTouches[0].screenY;
-    }, {passive: true});
-
-    document.addEventListener('touchend', e => {
-        let touchEndX = e.changedTouches[0].screenX;
-        let touchEndY = e.changedTouches[0].screenY;
-        handleSwipe(touchStartX, touchStartY, touchEndX, touchEndY);
-    }, {passive: true});
+    document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; touchStartY = e.changedTouches[0].screenY; }, {passive: true});
+    document.addEventListener('touchend', e => { handleSwipe(touchStartX, touchStartY, e.changedTouches[0].screenX, e.changedTouches[0].screenY); }, {passive: true});
 
     function handleSwipe(startX, startY, endX, endY) {
         const threshold = 60;
-        const diffX = endX - startX;
-        const diffY = endY - startY;
-
-        if (Math.abs(diffX) > Math.abs(diffY)) {
-            if (Math.abs(diffX) > threshold) {
-                moveDir(0, diffX > 0 ? -1 : 1); 
-            }
-        } else {
-            if (Math.abs(diffY) > threshold) {
-                moveDir(diffY > 0 ? -1 : 1, 0);
-            }
-        }
+        const diffX = endX - startX; const diffY = endY - startY;
+        if (Math.abs(diffX) > Math.abs(diffY)) { if (Math.abs(diffX) > threshold) moveDir(0, diffX > 0 ? -1 : 1); }
+        else { if (Math.abs(diffY) > threshold) moveDir(diffY > 0 ? -1 : 1, 0); }
     }
 
     async function load(name = "") {
@@ -113,7 +95,6 @@
         const sRight = document.getElementById('slot-right');
         loader.style.display = 'flex'; loader.style.opacity = '1';
         bar.style.width = "10%"; sLeft.innerText = "";
-
         try {
             const url = name ? `${PROXY_URL}?sheet=${encodeURIComponent(name)}` : PROXY_URL;
             const res = await fetch(url);
@@ -121,33 +102,16 @@
             const rawText = JSON.stringify(data).replace(/[^a-zA-ZÀ-ÿ]/g, ' ');
             const tokens = rawText.split(/\s+/).filter(t => t.length > 4);
             let i = 0;
-            const flash = setInterval(() => {
-                if (i < tokens.length) {
-                    sLeft.innerText = tokens[i] || "";
-                    sRight.innerText = tokens[i+1] || "";
-                    i += 2;
-                }
-            }, 50);
-
+            const flash = setInterval(() => { if (i < tokens.length) { sLeft.innerText = tokens[i] || ""; sRight.innerText = tokens[i+1] || ""; i += 2; } }, 50);
             processData(data);
             clearInterval(flash);
-            bar.style.width = "100%";
-            sLeft.innerText = "" + data.sheetName.toUpperCase();
-            sRight.innerText = "" + data.version;
-            loader.style.opacity = '0';
-            setTimeout(() => { loader.style.display = 'none'; }, 200);
+            bar.style.width = "100%"; sLeft.innerText = "" + data.sheetName.toUpperCase(); sRight.innerText = "" + data.version;
+            loader.style.opacity = '0'; setTimeout(() => { loader.style.display = 'none'; }, 200);
             if(!name) window.jumpTo(0, 0);
-        } catch (e) { 
-            sLeft.innerText = "ERR"; sRight.innerText = "CONX";
-            setTimeout(() => { loader.style.display = 'none'; }, 1000);
-        }
+        } catch (e) { sLeft.innerText = "ERR"; sRight.innerText = "CONX"; setTimeout(() => { loader.style.display = 'none'; }, 1000); }
     }
 
-    function processData(data) {
-        currentSheetName = data.sheetName;
-        globalMatrix = data.matrix;
-        render(); buildOutline();
-    }
+    function processData(data) { currentSheetName = data.sheetName; globalMatrix = data.matrix; render(); buildOutline(); }
 
     function render() {
         const container = document.getElementById('main-container');
@@ -161,7 +125,12 @@
                     slide.id = `s-${rIdx}-${cIdx}`;
                     const contentDiv = document.createElement('div');
                     contentDiv.className = 'content';
-                    contentDiv.innerHTML = marked.parse(cell.htmlContent);
+                    contentDiv.contentEditable = "true"; // MODE DÉMIURGE
+                    contentDiv.innerHTML = cell.htmlContent;
+                    
+                    // Synchronisation en temps réel avec la matrice
+                    contentDiv.oninput = (e) => { globalMatrix[rIdx][cIdx].htmlContent = e.target.innerHTML; };
+
                     slide.style.backgroundColor = cell.backgroundColor;
                     const hA = (cell.horizontalAlignment || "").toUpperCase();
                     const vA = (cell.verticalAlignment || "").toUpperCase();
@@ -186,7 +155,21 @@
     function moveDir(r, c, e) {
         if (e) e.stopPropagation();
         const nR = currentR + r, nC = currentC + c;
-        if (globalMatrix[nR] && globalMatrix[nR][nC]) window.jumpTo(nR, nC);
+        
+        // Création automatique de cellule si elle n'existe pas (Expansion du Multivers)
+        if (nR >= 0 && nC >= 0) {
+            if (!globalMatrix[nR]) globalMatrix[nR] = [];
+            if (!globalMatrix[nR][nC]) {
+                globalMatrix[nR][nC] = {
+                    htmlContent: "<span style='font-size:16pt;color:#333;font-family:Inconsolata;'>...</span>",
+                    horizontalAlignment: "center",
+                    verticalAlignment: "middle",
+                    backgroundColor: "#eeeeee"
+                };
+                render(); buildOutline();
+            }
+            window.jumpTo(nR, nC);
+        }
     }
 
     function updateArrows(r, c) {
@@ -194,13 +177,13 @@
         const cfg = {'v-up': has(r-1,c), 'v-down': has(r+1,c), 'h-left': has(r,c-1), 'h-right': has(r,c+1)};
         for (let id in cfg) { 
             const btn = document.getElementById(id);
-            if(btn) { btn.dataset.exists = !!cfg[id]; btn.style.display = cfg[id] ? 'flex' : 'none'; }
+            if(btn) { btn.dataset.exists = !!cfg[id]; btn.style.display = 'flex'; btn.style.opacity = cfg[id] ? "0.15" : "0.02"; }
         }
         showArrows();
     }
 
     function handleGlobalClick(e) {
-        if (e.target.closest('#outline-panel') || e.target.classList.contains('nav-arrow')) return;
+        if (e.target.closest('#outline-panel') || e.target.classList.contains('nav-arrow') || e.target.contentEditable === "true") return;
         showArrows(); 
         const now = Date.now();
         if (now - lastTapTime < 200) clickCount = 0; else clickCount++;
@@ -212,7 +195,7 @@
 
     function showArrows() {
         const arrows = document.querySelectorAll('.nav-arrow');
-        arrows.forEach(a => { if (a.dataset.exists === "true") a.classList.add('visible'); });
+        arrows.forEach(a => a.classList.add('visible'));
         clearTimeout(arrowTimer);
         arrowTimer = setTimeout(() => { arrows.forEach(a => a.classList.remove('visible')); }, 3000); 
     }
