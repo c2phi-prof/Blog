@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LabyBlog v4.2.6 - Rétro-Matriçage Intégral</title>
+    <title>LabyBlog v4.2.7 - Swipe & Dédale</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700&family=Inter:wght@300;400&display=swap" rel="stylesheet">
     <style>
@@ -31,17 +31,11 @@
         .map-dot { width: 100%; height: 100%; background-color: #fff; }
         .map-dot.occupied { background-color: #777; cursor: pointer; }
         .tool-btn { width: 40px; height: 40px; background: #fff; border: 1px solid #bbb; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #777; font-size: 1.2rem; transition: all 0.3s ease; }
-        
         @keyframes pulse-blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
         .btn-processing { animation: pulse-blink 0.5s infinite !important; color: #f39c12 !important; pointer-events: none; }
         .btn-success { color: #27ae60 !important; border-color: #27ae60 !important; }
         .btn-error { color: #e74c3c !important; border-color: #e74c3c !important; }
-
-        #outline-content { display: flex; flex-direction: column; gap: 2px; }
-        .outline-item { cursor: pointer; padding: 8px 12px; border-left: 3px solid #ddd; background-color: #f0f0f0; font-size: 0.65rem; color: #444; }
         .content { width: 100%; line-height: 1.4; font-size: 1.2rem; }
-        .content table { border-collapse: collapse; width: 100%; margin: 10px 0; }
-        .content td, .content th { border: 1px solid #ddd; padding: 8px; }
         a { color: inherit; text-decoration: underline; cursor: pointer; }
     </style>
 </head>
@@ -76,12 +70,41 @@
 <div id="main-container"></div>
 
 <script>
-    const HTML_VERSION = "4.2.6";
+    const HTML_VERSION = "4.2.7";
     const PROXY_URL = "https://script.google.com/macros/s/AKfycbyh6DHFtArE5EhPoz3bC9nwp_Fbuv4q_AA-7ICpl8LUMnAJiUrWqc6B_BQDNrVYCtLskQ/exec";
     let globalMatrix = [], currentSheetName = "", currentR = 0, currentC = 0;
     let clickCount = 0, clickTimer = null, arrowTimer = null, lastTapTime = 0;
+    let touchStartX = 0, touchStartY = 0;
 
     marked.setOptions({ gfm: true, breaks: true, sanitize: false });
+
+    // --- GESTION DU SWIPE ---
+    document.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+        touchStartY = e.changedTouches[0].screenY;
+    }, false);
+
+    document.addEventListener('touchend', e => {
+        let touchEndX = e.changedTouches[0].screenX;
+        let touchEndY = e.changedTouches[0].screenY;
+        handleSwipe(touchStartX, touchStartY, touchEndX, touchEndY);
+    }, false);
+
+    function handleSwipe(startX, startY, endX, endY) {
+        const threshold = 50;
+        const diffX = endX - startX;
+        const diffY = endY - startY;
+
+        if (Math.abs(diffX) > Math.abs(diffY)) {
+            if (Math.abs(diffX) > threshold) {
+                moveDir(0, diffX > 0 ? -1 : 1); // Inversé pour feeling naturel
+            }
+        } else {
+            if (Math.abs(diffY) > threshold) {
+                moveDir(diffY > 0 ? -1 : 1, 0);
+            }
+        }
+    }
 
     async function load(name = "") {
         const loader = document.getElementById('loader');
@@ -89,7 +112,7 @@
         const sLeft = document.getElementById('slot-left');
         const sRight = document.getElementById('slot-right');
         loader.style.display = 'flex'; loader.style.opacity = '1';
-        bar.style.width = "10%"; sLeft.innerText = "FETCH";
+        bar.style.width = "10%"; sLeft.innerText = "";
 
         try {
             const url = name ? `${PROXY_URL}?sheet=${encodeURIComponent(name)}` : PROXY_URL;
@@ -223,12 +246,8 @@
         const originalText = btn.innerText;
         btn.classList.add('btn-processing');
         try {
-            await fetch(PROXY_URL, { 
-                method: 'POST', 
-                mode: 'no-cors', 
-                body: JSON.stringify({ matrix: globalMatrix }) 
-            });
-            await new Promise(r => setTimeout(r, 2000));
+            await fetch(PROXY_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ matrix: globalMatrix }) });
+            await new Promise(r => setTimeout(r, 1500));
             btn.classList.remove('btn-processing');
             btn.classList.add('btn-success');
             btn.innerText = "✔";
