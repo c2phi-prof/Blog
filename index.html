@@ -3,66 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LabyBlog - Édition Finale</title>
+    <title>LabyBlog - Plan Monospace</title>
+    <!-- Import de la police Inconsolata -->
+    <link href="https://fonts.googleapis.com/css2?family=Inconsolata&display=swap" rel="stylesheet">
     <style>
-        body, html { 
-            margin: 0; padding: 0; height: 100%; width: 100%; 
-            overflow: hidden; background-color: #ffffff; 
-            font-family: sans-serif; touch-action: none; 
-        }
-        
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background-color: #ffffff; font-family: sans-serif; touch-action: none; }
         #main-container { width: 100vw; height: 100vh; position: relative; }
 
         .slide { 
-            position: absolute; top: 0; left: 0; 
-            width: 100vw; height: 100vh; 
-            display: none; box-sizing: border-box; 
-            /* Marges réduites mais pas à zéro */
-            padding: 20px; 
-            overflow-y: auto; 
-            touch-action: pan-y; 
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; 
+            display: none; box-sizing: border-box; padding: 20px; 
+            overflow-y: auto; touch-action: pan-y; 
         }
-
         .slide.active { display: flex; } 
 
         .nav-arrow { 
-            position: fixed; background: rgba(255, 255, 255, 0.5); 
-            border: none; font-size: 40px; color: #000000 !important; 
-            opacity: 0.2; z-index: 100; display: none; 
-            align-items: center; justify-content: center; 
+            position: fixed; background: rgba(255, 255, 255, 0.3); border: none; 
+            font-size: 40px; color: #000000 !important; z-index: 100; 
+            display: none; align-items: center; justify-content: center; 
             width: 60px; height: 60px; border-radius: 50%;
+            opacity: 0; transition: opacity 0.8s ease;
         }
-        
-        .nav-arrow.visible { display: flex; }
+        .nav-arrow.visible { display: flex; opacity: 0.15; } 
         
         .arrow-up { top: 10px; left: 50%; transform: translateX(-50%); }
         .arrow-down { bottom: 10px; left: 50%; transform: translateX(-50%); }
         .arrow-left { left: 10px; top: 50%; transform: translateY(-50%); }
         .arrow-right { right: 10px; top: 50%; transform: translateY(-50%); }
-        
-        .content { 
-            width: 100%; 
-            /* Interlignes réduites */
-            line-height: 1.2; 
-            font-size: 1.2rem;
-            white-space: pre-wrap; 
-            word-wrap: break-word;
-            transition: transform 0.3s ease;
-        }
 
-        @media (max-width: 768px) {
-            .slide { padding: 15px; }
-            .content { font-size: 1.1rem; }
-            .nav-arrow { width: 60px; height: 60px; opacity: 0.4; }
+        /* VOLET DU PLAN */
+        #outline-panel {
+            position: fixed; top: 0; left: -320px; width: 300px; height: 100%;
+            background: rgba(255, 255, 255, 0.98); box-shadow: 2px 0 15px rgba(0,0,0,0.1);
+            z-index: 1000; transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+            overflow-y: auto; padding: 20px; box-sizing: border-box;
+            font-family: 'Inconsolata', 'Courier New', Courier, monospace;
         }
+        #outline-panel.open { left: 0; }
+        #outline-panel h3 { 
+            font-size: 1.1rem; border-bottom: 1px solid #000; 
+            padding-bottom: 10px; margin-top: 0; text-transform: uppercase;
+        }
+        
+        .outline-item { 
+            cursor: pointer; padding: 6px 0; border-bottom: 1px solid #f0f0f0;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; 
+            overflow: hidden; 
+            font-size: 0.75rem; 
+            color: #555; line-height: 1.2;
+        }
+        .outline-item:hover { color: #000; background: #fcfcfc; }
+        .outline-empty { height: 1rem; border-left: 1px solid #eee; margin-left: 5px; }
+
+        .content { width: 100%; line-height: 1.2; font-size: 1.2rem; white-space: pre-wrap; word-wrap: break-word; }
+        
+        /* Assure que les liens internes sont cliquables et stylisés */
+        a { cursor: pointer; }
     </style>
 </head>
-<body>
+<body onclick="handleGlobalClick(event)">
 
-<button id="v-up" class="nav-arrow arrow-up" onclick="moveDir(-1, 0)">▲</button>
-<button id="v-down" class="nav-arrow arrow-down" onclick="moveDir(1, 0)">▼</button>
-<button id="h-left" class="nav-arrow arrow-left" onclick="moveDir(0, -1)">◀</button>
-<button id="h-right" class="nav-arrow arrow-right" onclick="moveDir(0, 1)">▶</button>
+<div id="outline-panel"><h3>Plan</h3><div id="outline-content"></div></div>
+
+<button id="v-up" class="nav-arrow arrow-up" onclick="moveDir(-1, 0, event)">▲</button>
+<button id="v-down" class="nav-arrow arrow-down" onclick="moveDir(1, 0, event)">▼</button>
+<button id="h-left" class="nav-arrow arrow-left" onclick="moveDir(0, -1, event)">◀</button>
+<button id="h-right" class="nav-arrow arrow-right" onclick="moveDir(0, 1, event)">▶</button>
 
 <div id="main-container"></div>
 
@@ -70,35 +76,32 @@
     const PROXY_URL = "https://script.google.com/macros/s/AKfycbyh6DHFtArE5EhPoz3bC9nwp_Fbuv4q_AA-7ICpl8LUMnAJiUrWqc6B_BQDNrVYCtLskQ/exec";
     let globalMatrix = [];
     let currentR = 0, currentC = 0;
+    let clickCount = 0, clickTimer = null;
+    let arrowTimer = null;
 
-    // GESTION DU SWIPE
-    let touchstartX = 0, touchstartY = 0;
-    window.addEventListener('touchstart', e => {
-        touchstartX = e.changedTouches[0].screenX;
-        touchstartY = e.changedTouches[0].screenY;
-    }, {passive: true});
+    function handleGlobalClick(e) {
+        // Empêche l'ouverture du plan si on clique sur un lien ou une flèche
+        if (e.target.classList.contains('nav-arrow') || e.target.closest('a')) return;
+        
+        showArrows(); 
 
-    window.addEventListener('touchend', e => {
-        handleGesture(e.changedTouches[0].screenX, e.changedTouches[0].screenY);
-    }, {passive: true});
+        clickCount++;
+        clearTimeout(clickTimer);
+        clickTimer = setTimeout(() => { clickCount = 0; }, 1200);
 
-    function handleGesture(endX, endY) {
-        const dx = endX - touchstartX;
-        const dy = endY - touchstartY;
-        const threshold = 70;
-
-        if (Math.abs(dx) > Math.abs(dy)) {
-            if (Math.abs(dx) > threshold) dx > 0 ? moveDir(0, -1) : moveDir(0, 1);
-        } else {
-            const activeSlide = document.querySelector('.slide.active');
-            const isAtTop = activeSlide.scrollTop <= 0;
-            const isAtBottom = activeSlide.scrollTop + activeSlide.clientHeight >= activeSlide.scrollHeight - 1;
-
-            if (Math.abs(dy) > threshold) {
-                if (dy > 0 && isAtTop) moveDir(-1, 0);
-                else if (dy < 0 && isAtBottom) moveDir(1, 0);
-            }
+        if (clickCount >= 5) {
+            document.getElementById('outline-panel').classList.toggle('open');
+            clickCount = 0;
         }
+    }
+
+    function showArrows() {
+        const arrows = document.querySelectorAll('.nav-arrow');
+        arrows.forEach(a => { if (a.dataset.exists === "true") a.classList.add('visible'); });
+        clearTimeout(arrowTimer);
+        arrowTimer = setTimeout(() => {
+            arrows.forEach(a => a.classList.remove('visible'));
+        }, 3000); 
     }
 
     async function load() {
@@ -106,21 +109,62 @@
             const res = await fetch(PROXY_URL);
             globalMatrix = await res.json();
             render();
-        } catch (e) { console.error("Erreur:", e); }
+            buildOutline();
+        } catch (e) { console.error("Erreur de chargement:", e); }
     }
 
-    function moveDir(r, c) {
-        const nextR = currentR + r;
-        const nextC = currentC + c;
-        if (globalMatrix[nextR] && globalMatrix[nextR][nextC]) {
-            const currentActive = document.querySelector('.slide.active');
-            if (currentActive) currentActive.classList.remove('active');
-            currentR = nextR; currentC = nextC;
-            const nextSlide = document.getElementById(`s-${currentR}-${currentC}`);
-            nextSlide.classList.add('active');
-            nextSlide.scrollTop = 0;
+    function buildOutline() {
+        const content = document.getElementById('outline-content');
+        content.innerHTML = "";
+        globalMatrix.forEach((row, rIdx) => {
+            row.forEach((cell, cIdx) => {
+                const item = document.createElement('div');
+                if (cell) {
+                    item.className = "outline-item";
+                    item.style.paddingLeft = (cIdx * 15) + "px"; 
+                    
+                    const tempDiv = document.createElement("div");
+                    tempDiv.innerHTML = cell.htmlContent;
+                    item.innerText = tempDiv.innerText.trim();
+                    
+                    item.onclick = (e) => {
+                        e.stopPropagation();
+                        window.jumpTo(rIdx, cIdx);
+                        document.getElementById('outline-panel').classList.remove('open');
+                    };
+                } else {
+                    item.className = "outline-empty";
+                }
+                content.appendChild(item);
+            });
+        });
+    }
+
+    /**
+     * Navigation globale
+     * window.jumpTo est attaché à l'objet global pour être accessible par 
+     * les attributs onclick des liens <a> générés dans Code.gs
+     */
+    window.jumpTo = function(r, c) {
+        const active = document.querySelector('.slide.active');
+        if (active) active.classList.remove('active');
+        
+        currentR = r; 
+        currentC = c;
+        
+        const target = document.getElementById(`s-${currentR}-${currentC}`);
+        if (target) {
+            target.classList.add('active');
+            target.scrollTop = 0;
             updateArrows(currentR, currentC);
         }
+    };
+
+    function moveDir(r, c, e) {
+        if (e) e.stopPropagation();
+        const nextR = currentR + r;
+        const nextC = currentC + c;
+        if (globalMatrix[nextR] && globalMatrix[nextR][nextC]) window.jumpTo(nextR, nextC);
     }
 
     function render() {
@@ -136,7 +180,6 @@
                     
                     const contentDiv = document.createElement('div');
                     contentDiv.className = 'content';
-                    // Sauts de ligne du tableur respectés
                     contentDiv.innerHTML = cell.htmlContent.replace(/\n/g, '<br>');
                     
                     slide.style.backgroundColor = cell.backgroundColor;
@@ -146,17 +189,6 @@
                     slide.style.justifyContent = hA.includes("CENTER") ? "center" : hA.includes("RIGHT") ? "flex-end" : "flex-start";
                     slide.style.alignItems = vA.includes("MIDDLE") ? "center" : vA.includes("BOTTOM") ? "flex-end" : "flex-start";
                     contentDiv.style.textAlign = hA.includes("CENTER") ? "center" : hA.includes("RIGHT") ? "right" : "left";
-                    
-                    // Gestion de la rotation
-                    if (cell.rotation) {
-                        contentDiv.style.transform = `rotate(${cell.rotation}deg)`;
-                    }
-
-                    // Logique visuelle basée sur les bordures du tableur
-                    if (cell.borderLogic) {
-                        if (cell.borderLogic.style === "DASHED") contentDiv.style.filter = "blur(3px)";
-                        if (cell.borderLogic.color === "#ff0000") slide.style.boxShadow = "inset 0 0 40px rgba(255,0,0,0.2)";
-                    }
                     
                     slide.appendChild(contentDiv);
                     container.appendChild(slide);
@@ -174,9 +206,12 @@
         const config = {'v-up': hasCell(r-1,c), 'v-down': hasCell(r+1,c), 'h-left': hasCell(r,c-1), 'h-right': hasCell(r,c+1)};
         for (let id in config) {
             const btn = document.getElementById(id);
-            btn.style.display = config[id] ? 'flex' : 'none';
-            config[id] ? btn.classList.add('visible') : btn.classList.remove('visible');
+            if(btn) {
+                btn.dataset.exists = config[id]; 
+                btn.style.display = config[id] ? 'flex' : 'none';
+            }
         }
+        showArrows(); 
     }
 
     load();
