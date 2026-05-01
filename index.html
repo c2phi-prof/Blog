@@ -2,208 +2,203 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LabyBlog - Stable</title>
+    <title>LabyBlog - Navigation Instantanée</title>
     <style>
-        :root { --primary: #000000; }
-
-        body, html {
-            margin: 0; padding: 0;
-            height: 100%; width: 100%;
-            overflow: hidden;
-            background-color: #ffffff;
-            font-family: sans-serif;
+        body, html { 
+            margin: 0; 
+            padding: 0; 
+            height: 100%; 
+            width: 100%; 
+            overflow: hidden; 
+            background-color: #ffffff; 
+            font-family: sans-serif; 
+        }
+        
+        /* Conteneur fixe : on ne scrolle plus physiquement */
+        #main-container { 
+            width: 100vw; 
+            height: 100vh; 
+            position: relative; 
         }
 
-        #viewport-y {
-            width: 100vw; height: 100vh;
-            overflow-y: scroll;
-            scroll-snap-type: y mandatory;
-            scroll-behavior: smooth;
-            scrollbar-width: none;
+        /* Les slides sont empilées les unes sur les autres */
+        .slide { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100vw; 
+            height: 100vh; 
+            display: none; /* Caché par défaut */
+            box-sizing: border-box; 
+            padding: 80px; 
+            border: none !important;
         }
 
-        .row-container { display: flex; width: 100vw; height: 100vh; scroll-snap-align: start; }
-        .viewport-x {
-            display: flex; width: 100vw; height: 100vh;
-            overflow-x: scroll; scroll-snap-type: x mandatory;
-            scroll-behavior: smooth; scrollbar-width: none;
-        }
-        #viewport-y::-webkit-scrollbar, .viewport-x::-webkit-scrollbar { display: none; }
+        /* Seule la slide active est affichée en Flexbox */
+        .slide.active { 
+            display: flex; 
+        } 
 
-        .slide {
-            flex: 0 0 100vw; height: 100vh;
-            display: flex; scroll-snap-align: start;
-            box-sizing: border-box; padding: 80px;
-            /* Suppression de toute ombre ou bordure parasite ici */
+        /* FLÈCHES NOIRES ET FIXES */
+        .nav-arrow { 
+            position: fixed; 
+            background: none; 
             border: none; 
-            box-shadow: none;
+            font-size: 40px; 
+            color: #000000 !important; 
+            opacity: 0.1; 
+            cursor: pointer; 
+            z-index: 100; 
+            display: none; /* Géré par le script updateArrows */
+            align-items: center; 
+            justify-content: center; 
+            width: 80px; 
+            height: 80px; 
+            transition: opacity 0.2s;
         }
-
-        /* FLÈCHES STABLES ET FIXES */
-        .nav-arrow {
-            position: fixed;
-            background: none; border: none;
-            font-size: 30px; color: #000;
-            opacity: 0.1;
-            cursor: pointer; z-index: 100;
-            transition: opacity 0.3s; /* Uniquement l'opacité change */
-            display: none; align-items: center; justify-content: center;
-            width: 60px; height: 60px;
-        }
+        
         .nav-arrow.visible { display: flex; }
-        .nav-arrow:hover { opacity: 0.5; transform: none; } /* Pas de scale/mouvement */
-
-        .arrow-up { top: 10px; left: 50%; transform: translateX(-50%); }
-        .arrow-down { bottom: 10px; left: 50%; transform: translateX(-50%); }
-        .arrow-left { left: 10px; top: 50%; transform: translateY(-50%); }
-        .arrow-right { right: 10px; top: 50%; transform: translateY(-50%); }
-
-        .content { max-width: 1100px; width: 100%; line-height: 1.6; }
-        .content a { color: inherit; text-decoration: underline; }
-
-        #plan-sidebar {
-            position: fixed; right: -320px; top: 0; width: 320px; height: 100%;
-            background: white; z-index: 200; transition: right 0.4s ease;
-            box-shadow: -5px 0 15px rgba(0,0,0,0.1); padding: 25px; box-sizing: border-box;
-            overflow-y: auto;
+        .nav-arrow:hover { opacity: 0.5; }
+        
+        /* Positionnement des flèches */
+        .arrow-up { top: 0; left: 50%; transform: translateX(-50%); }
+        .arrow-down { bottom: 0; left: 50%; transform: translateX(-50%); }
+        .arrow-left { left: 0; top: 50%; transform: translateY(-50%); }
+        .arrow-right { right: 0; top: 50%; transform: translateY(-50%); }
+        
+        .content { 
+            max-width: 1100px; 
+            width: 100%; 
+            line-height: 1.6; 
         }
-        #plan-sidebar.debug-mode { right: 0; }
-        .nav-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 13px; }
-        .nav-item.active { background: #f0f0f0; font-weight: bold; }
     </style>
 </head>
 <body>
 
+<!-- Interface de navigation -->
 <button id="v-up" class="nav-arrow arrow-up" onclick="moveDir(-1, 0)">▲</button>
 <button id="v-down" class="nav-arrow arrow-down" onclick="moveDir(1, 0)">▼</button>
 <button id="h-left" class="nav-arrow arrow-left" onclick="moveDir(0, -1)">◀</button>
 <button id="h-right" class="nav-arrow arrow-right" onclick="moveDir(0, 1)">▶</button>
 
-<div id="viewport-y"></div>
-
-<div id="plan-sidebar">
-    <h3 style="margin-top:0;">Exploration</h3>
-    <div id="plan-list"></div>
-</div>
+<div id="main-container"></div>
 
 <script>
+    // URL de votre déploiement Google Apps Script
     const PROXY_URL = "https://script.google.com/macros/s/AKfycbyh6DHFtArE5EhPoz3bC9nwp_Fbuv4q_AA-7ICpl8LUMnAJiUrWqc6B_BQDNrVYCtLskQ/exec";
+
     let globalMatrix = [];
     let currentR = 0, currentC = 0;
-    let inputLog = "";
-
-    window.addEventListener("keydown", (e) => {
-        inputLog += e.key;
-        if (inputLog.includes("1234")) { document.getElementById("plan-sidebar").classList.toggle("debug-mode"); inputLog = ""; }
-        if(e.key === "ArrowUp") moveDir(-1, 0);
-        if(e.key === "ArrowDown") moveDir(1, 0);
-        if(e.key === "ArrowLeft") moveDir(0, -1);
-        if(e.key === "ArrowRight") moveDir(0, 1);
-    });
-
-    function moveDir(r, c) {
-        const target = document.getElementById(`s-${currentR + r}-${currentC + c}`);
-        if (target) {
-            target.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'start' });
-        }
-    }
 
     async function load() {
         try {
             const res = await fetch(PROXY_URL);
             globalMatrix = await res.json();
             render();
-        } catch (e) { console.error("Erreur chargement:", e); }
+        } catch (e) { 
+            console.error("Erreur lors du chargement des données :", e); 
+        }
     }
 
+    /**
+     * Gère le changement de page instantané
+     */
+    function moveDir(r, c) {
+        const nextR = currentR + r;
+        const nextC = currentC + c;
+        
+        // Vérification de l'existence de la cible
+        if (globalMatrix[nextR] && globalMatrix[nextR][nextC]) {
+            // Retirer l'état actif de la page actuelle
+            const currentSlide = document.querySelector('.slide.active');
+            if (currentSlide) currentSlide.classList.remove('active');
+            
+            // Mettre à jour les coordonnées
+            currentR = nextR;
+            currentC = nextC;
+            
+            // Activer la nouvelle page
+            const nextSlide = document.getElementById(`s-${currentR}-${currentC}`);
+            if (nextSlide) nextSlide.classList.add('active');
+            
+            // Mettre à jour les flèches immédiatement
+            updateArrows(currentR, currentC);
+        }
+    }
+
+    /**
+     * Génère les slides dans le DOM
+     */
     function render() {
-        const container = document.getElementById('viewport-y');
-        const plan = document.getElementById('plan-list');
+        const container = document.getElementById('main-container');
         container.innerHTML = "";
         
         globalMatrix.forEach((row, rIdx) => {
-            const rowBlock = document.createElement('div');
-            rowBlock.className = 'row-container';
-            const sliderX = document.createElement('div');
-            sliderX.className = 'viewport-x';
-            
             row.forEach((cell, cIdx) => {
-                const sId = `s-${rIdx}-${cIdx}`;
-                const slide = document.createElement('div');
-                slide.className = 'slide';
-                slide.id = sId;
-                slide.dataset.r = rIdx; slide.dataset.c = cIdx;
-
-                if (cell && cell.htmlContent) {
+                if (cell) {
+                    const slide = document.createElement('div');
+                    slide.className = 'slide';
+                    // Active la première cellule trouvée (généralement A1)
+                    if (rIdx === 0 && cIdx === 0) slide.classList.add('active');
+                    slide.id = `s-${rIdx}-${cIdx}`;
+                    
                     const contentDiv = document.createElement('div');
                     contentDiv.className = 'content';
                     contentDiv.innerHTML = cell.htmlContent;
                     
-                    slide.style.backgroundColor = cell.backgroundColor || "#ffffff";
-                    contentDiv.style.color = cell.defaultFontColor || "#000000";
-
-                    // Alignement
-                    const fH = cell.horizontalAlignment === 'CENTER' ? 'center' : cell.horizontalAlignment === 'RIGHT' ? 'flex-end' : 'flex-start';
-                    const fV = cell.verticalAlignment === 'MIDDLE' ? 'center' : cell.verticalAlignment === 'BOTTOM' ? 'flex-end' : 'flex-start';
-
-                    slide.style.justifyContent = fH;
-                    slide.style.alignItems = fV;
-                    contentDiv.style.textAlign = cell.horizontalAlignment?.toLowerCase() || 'left';
+                    slide.style.backgroundColor = cell.backgroundColor;
                     
-                    // Application des bordures si elles existent
-                    if(cell.border) {
-                        slide.style.borderTop = cell.border.top;
-                        slide.style.borderBottom = cell.border.bottom;
-                    }
-
+                    // Gestion souple des alignements
+                    const hA = (cell.horizontalAlignment || "").toUpperCase();
+                    const vA = (cell.verticalAlignment || "").toUpperCase();
+                    
+                    slide.style.justifyContent = hA.includes("CENTER") ? "center" : hA.includes("RIGHT") ? "flex-end" : "flex-start";
+                    slide.style.alignItems = vA.includes("MIDDLE") ? "center" : vA.includes("BOTTOM") ? "flex-end" : "flex-start";
+                    contentDiv.style.textAlign = hA.includes("CENTER") ? "center" : hA.includes("RIGHT") ? "right" : "left";
+                    
                     slide.appendChild(contentDiv);
-
-                    // Ajout au plan
-                    const navItem = document.createElement('div');
-                    navItem.className = 'nav-item';
-                    navItem.id = `nav-item-${sId}`;
-                    navItem.innerText = cell.htmlContent.replace(/<[^>]*>/g, '').substring(0, 35);
-                    navItem.onclick = () => document.getElementById(sId).scrollIntoView({behavior:'smooth'});
-                    plan.appendChild(navItem);
-                } else {
-                    slide.style.backgroundColor = "transparent";
-                    slide.style.visibility = "hidden"; 
+                    container.appendChild(slide);
                 }
-                sliderX.appendChild(slide);
             });
-            rowBlock.appendChild(sliderX);
-            container.appendChild(rowBlock);
         });
-        setupObserver();
+        // Initialisation des flèches pour le point de départ
+        updateArrows(0, 0);
     }
 
-    function setupObserver() {
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    currentR = parseInt(entry.target.dataset.r);
-                    currentC = parseInt(entry.target.dataset.c);
-                    
-                    const isV = (r, c) => {
-                        return globalMatrix[r] && globalMatrix[r][c] && globalMatrix[r][c].htmlContent;
-                    };
+    /**
+     * Logique de détection des voisins pour afficher/cacher les flèches
+     */
+    function updateArrows(r, c) {
+        const hasCell = (row, col) => {
+            if (row < 0 || col < 0) return false;
+            // Vérifie si la ligne existe et si la cellule n'est pas vide
+            return globalMatrix[row] && 
+                   globalMatrix[row][col] !== undefined && 
+                   globalMatrix[row][col] !== null;
+        };
+        
+        const config = {
+            'v-up': hasCell(r - 1, c),
+            'v-down': hasCell(r + 1, c),
+            'h-left': hasCell(r, c - 1),
+            'h-right': hasCell(r, c + 1)
+        };
 
-                    document.getElementById('v-up').classList.toggle('visible', isV(currentR-1, currentC));
-                    document.getElementById('v-down').classList.toggle('visible', isV(currentR+1, currentC));
-                    document.getElementById('h-left').classList.toggle('visible', isV(currentR, currentC-1));
-                    document.getElementById('h-right').classList.toggle('visible', isV(currentR, currentC+1));
-
-                    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-                    const activeNav = document.getElementById(`nav-item-s-${currentR}-${currentC}`);
-                    if(activeNav) activeNav.classList.add('active');
-                }
-            });
-        }, { threshold: 0.6 });
-        document.querySelectorAll('.slide').forEach(s => observer.observe(s));
+        // Application stricte de l'état (nécessaire pour Opera GX)
+        for (let id in config) {
+            const btn = document.getElementById(id);
+            if (config[id]) {
+                btn.style.display = 'flex';
+                btn.classList.add('visible');
+            } else {
+                btn.classList.remove('visible');
+                btn.style.display = 'none';
+            }
+        }
     }
 
-    load();
+    // Lancement du chargement
+    window.onload = load;
 </script>
 </body>
 </html>
