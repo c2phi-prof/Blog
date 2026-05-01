@@ -3,130 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LabyBlog Officiel</title>
+    <title>LabyBlog - Stable</title>
     <style>
-        :root {
-            --primary: #2196F3;
-        }
+        :root { --primary: #000000; }
 
         body, html {
             margin: 0; padding: 0;
             height: 100%; width: 100%;
             overflow: hidden;
-            background-color: #f8f9fa;
+            background-color: #ffffff;
             font-family: sans-serif;
         }
 
-        /* Système de navigation plein écran */
         #viewport-y {
-            width: 100vw;
-            height: 100vh;
+            width: 100vw; height: 100vh;
             overflow-y: scroll;
             scroll-snap-type: y mandatory;
             scroll-behavior: smooth;
-            -ms-overflow-style: none; scrollbar-width: none;
+            scrollbar-width: none;
         }
 
-        .row-container {
-            display: flex;
-            width: 100vw;
-            height: 100vh;
-            position: relative;
-            scroll-snap-align: start;
-        }
-
+        .row-container { display: flex; width: 100vw; height: 100vh; scroll-snap-align: start; }
         .viewport-x {
-            display: flex;
-            width: 100vw;
-            height: 100vh;
-            overflow-x: scroll;
-            scroll-snap-type: x mandatory;
-            scroll-behavior: smooth;
-            -ms-overflow-style: none; scrollbar-width: none;
+            display: flex; width: 100vw; height: 100vh;
+            overflow-x: scroll; scroll-snap-type: x mandatory;
+            scroll-behavior: smooth; scrollbar-width: none;
         }
-
-        ::-webkit-scrollbar { display: none; }
+        #viewport-y::-webkit-scrollbar, .viewport-x::-webkit-scrollbar { display: none; }
 
         .slide {
-            flex: 0 0 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            scroll-snap-align: start;
-            background: white;
-            box-sizing: border-box;
-            padding: 50px;
+            flex: 0 0 100vw; height: 100vh;
+            display: flex; scroll-snap-align: start;
+            box-sizing: border-box; padding: 80px;
+            /* Suppression de toute ombre ou bordure parasite ici */
+            border: none; 
+            box-shadow: none;
         }
 
-        /* Rendu du texte et des liens */
-        .content {
-            max-width: 1000px;
-            width: 100%;
-            text-align: center;
-            line-height: 1.4;
-        }
-
-        .content a {
-            color: inherit;
-            text-decoration: underline;
-            transition: opacity 0.2s;
-        }
-        
-        .content a:hover { opacity: 0.7; }
-
-        /* FLÈCHES STABLES */
+        /* FLÈCHES STABLES ET FIXES */
         .nav-arrow {
-            position: fixed; 
-            background: rgba(0,0,0,0.1); 
-            border: none;
-            width: 55px; height: 55px; border-radius: 50%;
-            cursor: pointer; display: none; align-items: center; justify-content: center;
-            z-index: 100; font-size: 28px; color: #333; 
-            transition: all 0.2s;
-        }
-        
-        .nav-arrow.visible { display: flex; }
-        .nav-arrow:hover { background: var(--primary); color: white; }
-
-        .arrow-up { top: 20px; left: 50%; translate: -50% 0; }
-        .arrow-down { bottom: 20px; left: 50%; translate: -50% 0; }
-        .arrow-left { left: 20px; top: 50%; translate: 0 -50%; }
-        .arrow-right { right: 20px; top: 50%; translate: 0 -50%; }
-
-        /* Sidebar Mode Plan (Cheat Code) */
-        #plan-sidebar {
             position: fixed;
-            right: -320px; top: 0;
-            width: 320px; height: 100%;
-            background: white;
-            z-index: 200;
-            transition: right 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: none; border: none;
+            font-size: 30px; color: #000;
+            opacity: 0.1;
+            cursor: pointer; z-index: 100;
+            transition: opacity 0.3s; /* Uniquement l'opacité change */
+            display: none; align-items: center; justify-content: center;
+            width: 60px; height: 60px;
+        }
+        .nav-arrow.visible { display: flex; }
+        .nav-arrow:hover { opacity: 0.5; transform: none; } /* Pas de scale/mouvement */
+
+        .arrow-up { top: 10px; left: 50%; transform: translateX(-50%); }
+        .arrow-down { bottom: 10px; left: 50%; transform: translateX(-50%); }
+        .arrow-left { left: 10px; top: 50%; transform: translateY(-50%); }
+        .arrow-right { right: 10px; top: 50%; transform: translateY(-50%); }
+
+        .content { max-width: 1100px; width: 100%; line-height: 1.6; }
+        .content a { color: inherit; text-decoration: underline; }
+
+        #plan-sidebar {
+            position: fixed; right: -320px; top: 0; width: 320px; height: 100%;
+            background: white; z-index: 200; transition: right 0.4s ease;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.1); padding: 25px; box-sizing: border-box;
             overflow-y: auto;
-            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
-            padding: 25px; box-sizing: border-box;
         }
         #plan-sidebar.debug-mode { right: 0; }
-        .nav-item { 
-            padding: 12px; cursor: pointer; border-bottom: 1px solid #f0f0f0; 
-            font-size: 0.85rem; color: #555;
-        }
-        .nav-item:hover { background: #f0f7ff; color: var(--primary); }
-        .nav-item.active { background: #e3f2fd; font-weight: bold; color: #0d47a1; }
+        .nav-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 13px; }
+        .nav-item.active { background: #f0f0f0; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<!-- Navigation Harmonisée -->
-<button id="v-up" class="nav-arrow arrow-up" onclick="moveVertical(-1)">▲</button>
-<button id="v-down" class="nav-arrow arrow-down" onclick="moveVertical(1)">▼</button>
-<button id="h-left" class="nav-arrow arrow-left" onclick="moveHorizontal(-1)">◀</button>
-<button id="h-right" class="nav-arrow arrow-right" onclick="moveHorizontal(1)">▶</button>
+<button id="v-up" class="nav-arrow arrow-up" onclick="moveDir(-1, 0)">▲</button>
+<button id="v-down" class="nav-arrow arrow-down" onclick="moveDir(1, 0)">▼</button>
+<button id="h-left" class="nav-arrow arrow-left" onclick="moveDir(0, -1)">◀</button>
+<button id="h-right" class="nav-arrow arrow-right" onclick="moveDir(0, 1)">▶</button>
 
 <div id="viewport-y"></div>
 
 <div id="plan-sidebar">
-    <h2 style="margin-top:0; font-size:1.2rem; border-bottom: 2px solid var(--primary); padding-bottom:10px;">Structure du Blog</h2>
+    <h3 style="margin-top:0;">Exploration</h3>
     <div id="plan-list"></div>
 </div>
 
@@ -136,27 +93,20 @@
     let currentR = 0, currentC = 0;
     let inputLog = "";
 
-    // Cheat Code & Clavier
     window.addEventListener("keydown", (e) => {
         inputLog += e.key;
-        if (inputLog.includes("1234")) {
-            document.getElementById("plan-sidebar").classList.toggle("debug-mode");
-            inputLog = "";
-        }
-        if(e.key === "ArrowUp") moveVertical(-1);
-        if(e.key === "ArrowDown") moveVertical(1);
-        if(e.key === "ArrowLeft") moveHorizontal(-1);
-        if(e.key === "ArrowRight") moveHorizontal(1);
+        if (inputLog.includes("1234")) { document.getElementById("plan-sidebar").classList.toggle("debug-mode"); inputLog = ""; }
+        if(e.key === "ArrowUp") moveDir(-1, 0);
+        if(e.key === "ArrowDown") moveDir(1, 0);
+        if(e.key === "ArrowLeft") moveDir(0, -1);
+        if(e.key === "ArrowRight") moveDir(0, 1);
     });
 
-    function moveVertical(dir) {
-        const target = document.getElementById(`s-${currentR + dir}-${currentC}`);
-        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    function moveHorizontal(dir) {
-        const target = document.getElementById(`s-${currentR}-${currentC + dir}`);
-        if (target) target.scrollIntoView({ behavior: 'smooth', inline: 'start' });
+    function moveDir(r, c) {
+        const target = document.getElementById(`s-${currentR + r}-${currentC + c}`);
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'start' });
+        }
     }
 
     async function load() {
@@ -164,16 +114,13 @@
             const res = await fetch(PROXY_URL);
             globalMatrix = await res.json();
             render();
-        } catch (e) {
-            console.error("Erreur de chargement:", e);
-        }
+        } catch (e) { console.error("Erreur chargement:", e); }
     }
 
     function render() {
         const container = document.getElementById('viewport-y');
         const plan = document.getElementById('plan-list');
         container.innerHTML = "";
-        plan.innerHTML = "";
         
         globalMatrix.forEach((row, rIdx) => {
             const rowBlock = document.createElement('div');
@@ -186,37 +133,44 @@
                 const slide = document.createElement('div');
                 slide.className = 'slide';
                 slide.id = sId;
-                slide.dataset.r = rIdx; 
-                slide.dataset.c = cIdx;
+                slide.dataset.r = rIdx; slide.dataset.c = cIdx;
 
-                const contentDiv = document.createElement('div');
-                contentDiv.className = 'content';
-                
-                // Traitement des données riches reçues
-                if (cell && typeof cell === 'object') {
-                    contentDiv.innerHTML = cell.htmlContent || "";
-                    if(cell.fontSize) contentDiv.style.fontSize = cell.fontSize + "pt";
-                    if(cell.fontColor) contentDiv.style.color = cell.fontColor;
-                    contentDiv.style.fontWeight = cell.isBold ? "bold" : "normal";
-                    contentDiv.style.fontStyle = cell.isItalic ? "italic" : "normal";
-                    if(cell.fontFamily) contentDiv.style.fontFamily = cell.fontFamily;
-                } else {
-                    contentDiv.innerText = cell || "";
-                }
+                if (cell && cell.htmlContent) {
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = 'content';
+                    contentDiv.innerHTML = cell.htmlContent;
+                    
+                    slide.style.backgroundColor = cell.backgroundColor || "#ffffff";
+                    contentDiv.style.color = cell.defaultFontColor || "#000000";
 
-                slide.appendChild(contentDiv);
-                sliderX.appendChild(slide);
+                    // Alignement
+                    const fH = cell.horizontalAlignment === 'CENTER' ? 'center' : cell.horizontalAlignment === 'RIGHT' ? 'flex-end' : 'flex-start';
+                    const fV = cell.verticalAlignment === 'MIDDLE' ? 'center' : cell.verticalAlignment === 'BOTTOM' ? 'flex-end' : 'flex-start';
 
-                // Construction du plan latéral
-                const rawText = cell.htmlContent ? cell.htmlContent.replace(/<[^>]*>/g, '') : cell.toString();
-                if (rawText.trim() !== "") {
+                    slide.style.justifyContent = fH;
+                    slide.style.alignItems = fV;
+                    contentDiv.style.textAlign = cell.horizontalAlignment?.toLowerCase() || 'left';
+                    
+                    // Application des bordures si elles existent
+                    if(cell.border) {
+                        slide.style.borderTop = cell.border.top;
+                        slide.style.borderBottom = cell.border.bottom;
+                    }
+
+                    slide.appendChild(contentDiv);
+
+                    // Ajout au plan
                     const navItem = document.createElement('div');
                     navItem.className = 'nav-item';
                     navItem.id = `nav-item-${sId}`;
-                    navItem.innerText = rawText.substring(0, 40) + (rawText.length > 40 ? "..." : "");
+                    navItem.innerText = cell.htmlContent.replace(/<[^>]*>/g, '').substring(0, 35);
                     navItem.onclick = () => document.getElementById(sId).scrollIntoView({behavior:'smooth'});
                     plan.appendChild(navItem);
+                } else {
+                    slide.style.backgroundColor = "transparent";
+                    slide.style.visibility = "hidden"; 
                 }
+                sliderX.appendChild(slide);
             });
             rowBlock.appendChild(sliderX);
             container.appendChild(rowBlock);
@@ -231,26 +185,21 @@
                     currentR = parseInt(entry.target.dataset.r);
                     currentC = parseInt(entry.target.dataset.c);
                     
-                    // Vérification des voisins
-                    const hasUp = currentR > 0 && globalMatrix[currentR-1][currentC] && (globalMatrix[currentR-1][currentC].htmlContent || globalMatrix[currentR-1][currentC].toString()).trim() !== "";
-                    const hasDown = currentR < globalMatrix.length - 1 && globalMatrix[currentR+1][currentC] && (globalMatrix[currentR+1][currentC].htmlContent || globalMatrix[currentR+1][currentC].toString()).trim() !== "";
-                    const hasLeft = currentC > 0 && globalMatrix[currentR][currentC-1] && (globalMatrix[currentR][currentC-1].htmlContent || globalMatrix[currentR][currentC-1].toString()).trim() !== "";
-                    const hasRight = currentC < globalMatrix[currentR].length - 1 && globalMatrix[currentR][currentC+1] && (globalMatrix[currentR][currentC+1].htmlContent || globalMatrix[currentR][currentC+1].toString()).trim() !== "";
+                    const isV = (r, c) => {
+                        return globalMatrix[r] && globalMatrix[r][c] && globalMatrix[r][c].htmlContent;
+                    };
 
-                    // Mise à jour des flèches
-                    document.getElementById('v-up').classList.toggle('visible', !!hasUp);
-                    document.getElementById('v-down').classList.toggle('visible', !!hasDown);
-                    document.getElementById('h-left').classList.toggle('visible', !!hasLeft);
-                    document.getElementById('h-right').classList.toggle('visible', !!hasRight);
+                    document.getElementById('v-up').classList.toggle('visible', isV(currentR-1, currentC));
+                    document.getElementById('v-down').classList.toggle('visible', isV(currentR+1, currentC));
+                    document.getElementById('h-left').classList.toggle('visible', isV(currentR, currentC-1));
+                    document.getElementById('h-right').classList.toggle('visible', isV(currentR, currentC+1));
 
-                    // Mise à jour visuelle du plan
                     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
                     const activeNav = document.getElementById(`nav-item-s-${currentR}-${currentC}`);
                     if(activeNav) activeNav.classList.add('active');
                 }
             });
         }, { threshold: 0.6 });
-
         document.querySelectorAll('.slide').forEach(s => observer.observe(s));
     }
 
