@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LabyBlog v4.2.5 - Rétro-Matriçage Batch</title>
+    <title>LabyBlog v4.2.6 - Rétro-Matriçage Intégral</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700&family=Inter:wght@300;400&display=swap" rel="stylesheet">
     <style>
@@ -76,7 +76,7 @@
 <div id="main-container"></div>
 
 <script>
-    const HTML_VERSION = "4.2.5";
+    const HTML_VERSION = "4.2.6";
     const PROXY_URL = "https://script.google.com/macros/s/AKfycbyh6DHFtArE5EhPoz3bC9nwp_Fbuv4q_AA-7ICpl8LUMnAJiUrWqc6B_BQDNrVYCtLskQ/exec";
     let globalMatrix = [], currentSheetName = "", currentR = 0, currentC = 0;
     let clickCount = 0, clickTimer = null, arrowTimer = null, lastTapTime = 0;
@@ -89,7 +89,7 @@
         const sLeft = document.getElementById('slot-left');
         const sRight = document.getElementById('slot-right');
         loader.style.display = 'flex'; loader.style.opacity = '1';
-        bar.style.width = "10%"; sLeft.innerText = "";
+        bar.style.width = "10%"; sLeft.innerText = "FETCH";
 
         try {
             const url = name ? `${PROXY_URL}?sheet=${encodeURIComponent(name)}` : PROXY_URL;
@@ -228,7 +228,7 @@
                 mode: 'no-cors', 
                 body: JSON.stringify({ matrix: globalMatrix }) 
             });
-            await new Promise(r => setTimeout(r, 1500));
+            await new Promise(r => setTimeout(r, 2000));
             btn.classList.remove('btn-processing');
             btn.classList.add('btn-success');
             btn.innerText = "✔";
