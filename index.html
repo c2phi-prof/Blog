@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LabyBlog v4.2.0 - Système d'Import/Export</title>
+    <title>LabyBlog v4.2.3 - Vitesse Absolue (Opportunistic Loader)</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700&family=Inter:wght@300;400&display=swap" rel="stylesheet">
     <style>
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background-color: #ffffff; font-family: 'Inter', sans-serif; touch-action: none; }
         #main-container { width: 100vw; height: 100vh; position: relative; }
-        #loader { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #fff; display: flex; align-items: center; justify-content: center; z-index: 2000; transition: opacity 0.4s ease; }
+        #loader { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #fff; display: flex; align-items: center; justify-content: center; z-index: 2000; transition: opacity 0.2s ease; }
         .data-engine { display: flex; align-items: center; width: 450px; font-family: 'Inconsolata', monospace; font-size: 13px; color: #000; }
         .data-slot { width: 150px; overflow: hidden; white-space: nowrap; text-transform: uppercase; letter-spacing: 1px; }
         #slot-left { text-align: right; padding-right: 20px; font-weight: 700; }
         #slot-right { text-align: left; padding-left: 20px; }
         .track { flex-grow: 1; height: 1px; background: #f0f0f0; position: relative; }
-        #progress-line { position: absolute; left: 0; top: 0; height: 100%; width: 0%; background: #000; transition: width 0.3s cubic-bezier(0.1, 0.5, 0.5, 1); }
+        #progress-line { position: absolute; left: 0; top: 0; height: 100%; width: 0%; background: #000; transition: width 0.1s linear; }
         .slide { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; box-sizing: border-box; padding: 40px; overflow-y: auto; touch-action: pan-y; }
         .slide.active { display: flex; } 
         .nav-arrow { position: fixed; background: rgba(255, 255, 255, 0.3); border: none; font-size: 40px; color: #000; z-index: 100; display: none; align-items: center; justify-content: center; width: 60px; height: 60px; border-radius: 50%; opacity: 0; transition: opacity 0.8s ease; }
@@ -70,7 +70,7 @@
 <div id="main-container"></div>
 
 <script>
-    const HTML_VERSION = "4.2.0";
+    const HTML_VERSION = "4.2.3";
     const PROXY_URL = "https://script.google.com/macros/s/AKfycbyh6DHFtArE5EhPoz3bC9nwp_Fbuv4q_AA-7ICpl8LUMnAJiUrWqc6B_BQDNrVYCtLskQ/exec";
     let globalMatrix = [], currentSheetName = "", currentR = 0, currentC = 0;
     let clickCount = 0, clickTimer = null, arrowTimer = null, lastTapTime = 0;
@@ -86,7 +86,7 @@
         loader.style.display = 'flex';
         loader.style.opacity = '1';
         bar.style.width = "10%";
-        sLeft.innerText = "INIT";
+        sLeft.innerText = "";
 
         try {
             const url = name ? `${PROXY_URL}?sheet=${encodeURIComponent(name)}` : PROXY_URL;
@@ -94,23 +94,39 @@
             bar.style.width = "40%";
             const data = await res.json();
             
+            // --- MOTEUR D'EXTRACTION OPPORTUNISTE ---
+            const rawText = JSON.stringify(data).replace(/[^a-zA-ZÀ-ÿ]/g, ' ');
+            const tokens = rawText.split(/\s+/).filter(t => t.length > 4);
+            let i = 0;
+            const flash = setInterval(() => {
+                if (i < tokens.length) {
+                    sLeft.innerText = tokens[i] || "";
+                    sRight.innerText = tokens[i+1] || "";
+                    i += 2;
+                }
+            }, 50);
+
+            // --- RENDU IMMÉDIAT ---
             processData(data);
             
+            // --- FINALISATION SANS DÉLAI ---
+            clearInterval(flash);
             bar.style.width = "100%";
-            sLeft.innerText = "STRATE:" + data.sheetName.toUpperCase();
-            sRight.innerText = "VER:" + data.version;
+            sLeft.innerText = "" + data.sheetName.toUpperCase();
+            sRight.innerText = "" + data.version;
 
+            // Disparition ultra-rapide (200ms)
+            loader.style.opacity = '0';
             setTimeout(() => {
-                loader.style.opacity = '0';
-                setTimeout(() => loader.style.display = 'none', 400);
-            }, 600);
+                loader.style.display = 'none';
+            }, 200);
 
             if(!name) window.jumpTo(0, 0);
         } catch (e) { 
             console.error(e);
             sLeft.innerText = "ERR";
-            sRight.innerText = "OFFLINE";
-            setTimeout(() => { loader.style.display = 'none'; }, 2000);
+            sRight.innerText = "CONX";
+            setTimeout(() => { loader.style.display = 'none'; }, 1000);
         }
     }
 
@@ -192,27 +208,19 @@
         arrowTimer = setTimeout(() => { arrows.forEach(a => a.classList.remove('visible')); }, 3000); 
     }
 
-    // --- FONCTIONS D'IMPORT / EXPORT ---
-
     function exportAndCopy() {
-        const dataStr = JSON.stringify({
-            sheetName: currentSheetName,
-            matrix: globalMatrix,
-            version: HTML_VERSION
-        }, null, 2);
+        const dataStr = JSON.stringify({ sheetName: currentSheetName, matrix: globalMatrix, version: HTML_VERSION }, null, 2);
         const blob = new Blob([dataStr], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = `Matrice_${currentSheetName}_v${HTML_VERSION}.json`;
+        link.download = `Matrice_${currentSheetName}.json`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
     }
 
-    function smartImport() {
-        document.getElementById('import-input').click();
-    }
+    function smartImport() { document.getElementById('import-input').click(); }
 
     function importMatrixFile(event) {
         const file = event.target.files[0];
@@ -223,23 +231,16 @@
                 const data = JSON.parse(e.target.result);
                 processData(data);
                 window.jumpTo(0, 0);
-                alert("Matrice importée avec succès.");
-            } catch (err) {
-                alert("Erreur lors de la lecture du fichier JSON.");
-            }
+            } catch (err) { alert("Erreur JSON"); }
         };
         reader.readAsText(file);
     }
 
     async function exportToSheet() {
         try {
-            const res = await fetch(PROXY_URL, { 
-                method: 'POST', 
-                mode: 'no-cors',
-                body: JSON.stringify({ sheetName: currentSheetName, matrix: globalMatrix }) 
-            });
-            alert("Requête de Rétro-Matriçage envoyée.");
-        } catch (e) { alert("Erreur Rétro-Matriçage"); }
+            await fetch(PROXY_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ sheetName: currentSheetName, matrix: globalMatrix }) });
+            alert("Rétro-Matriçage lancé.");
+        } catch (e) { alert("Erreur"); }
     }
 
     function buildOutline() {
@@ -257,7 +258,7 @@
                     item.className = "outline-item";
                     item.style.marginLeft = (cIdx * 20) + "px";
                     const temp = document.createElement("div"); temp.innerHTML = cell.htmlContent;
-                    item.innerText = temp.innerText.trim().substring(0, 50) || `[Cellule ${rIdx},${cIdx}]`;
+                    item.innerText = temp.innerText.trim().substring(0, 50) || `[${rIdx},${cIdx}]`;
                     item.onclick = () => { window.jumpTo(rIdx, cIdx); document.getElementById('outline-panel').classList.remove('open'); };
                     content.appendChild(item);
                 } else dot.className = "map-dot";
