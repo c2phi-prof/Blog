@@ -3,28 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LabyBlog v4.1 - Markdown Hybrid (Loader 4.2.5)</title>
-    <!-- Import du parseur Markdown -->
+    <title>LabyBlog v4.2.0 - Système d'Import/Export</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700&family=Inter:wght@300;400&display=swap" rel="stylesheet">
     <style>
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background-color: #ffffff; font-family: 'Inter', sans-serif; touch-action: none; }
         #main-container { width: 100vw; height: 100vh; position: relative; }
-        
-        /* --- SPLASH SCREEN 4.2.5 --- */
-        #loader {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #fff; display: flex; align-items: center; justify-content: center; z-index: 2000;
-            transition: opacity 0.4s ease;
-        }
+        #loader { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #fff; display: flex; align-items: center; justify-content: center; z-index: 2000; transition: opacity 0.4s ease; }
         .data-engine { display: flex; align-items: center; width: 450px; font-family: 'Inconsolata', monospace; font-size: 13px; color: #000; }
         .data-slot { width: 150px; overflow: hidden; white-space: nowrap; text-transform: uppercase; letter-spacing: 1px; }
         #slot-left { text-align: right; padding-right: 20px; font-weight: 700; }
         #slot-right { text-align: left; padding-left: 20px; }
         .track { flex-grow: 1; height: 1px; background: #f0f0f0; position: relative; }
         #progress-line { position: absolute; left: 0; top: 0; height: 100%; width: 0%; background: #000; transition: width 0.3s cubic-bezier(0.1, 0.5, 0.5, 1); }
-
-        /* --- INTERFACE --- */
         .slide { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; box-sizing: border-box; padding: 40px; overflow-y: auto; touch-action: pan-y; }
         .slide.active { display: flex; } 
         .nav-arrow { position: fixed; background: rgba(255, 255, 255, 0.3); border: none; font-size: 40px; color: #000; z-index: 100; display: none; align-items: center; justify-content: center; width: 60px; height: 60px; border-radius: 50%; opacity: 0; transition: opacity 0.8s ease; }
@@ -39,11 +30,10 @@
         #matrix-minimap { display: grid; gap: 1px; background: #eee; border: 1px solid #bbb; padding: 2px; width: 40px; height: 40px; }
         .map-dot { width: 100%; height: 100%; background-color: #fff; }
         .map-dot.occupied { background-color: #777; cursor: pointer; }
-        .tool-btn { width: 40px; height: 40px; background: #fff; border: 1px solid #bbb; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #777; }
+        .tool-btn { width: 40px; height: 40px; background: #fff; border: 1px solid #bbb; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #777; font-size: 1.2rem; }
         #outline-content { display: flex; flex-direction: column; gap: 2px; }
         .outline-item { cursor: pointer; padding: 8px 12px; border-left: 3px solid #ddd; background-color: #f0f0f0; font-size: 0.65rem; color: #444; }
         .content { width: 100%; line-height: 1.4; font-size: 1.2rem; }
-        .content h1, .content h2, .content h3 { margin-top: 0; line-height: 1.2; }
         .content table { border-collapse: collapse; width: 100%; margin: 10px 0; }
         .content td, .content th { border: 1px solid #ddd; padding: 8px; }
         a { color: inherit; text-decoration: underline; cursor: pointer; }
@@ -63,8 +53,8 @@
     <div class="outline-header">
         <div id="matrix-minimap"></div>
         <div class="header-tools" style="display:flex; gap:10px;">
-            <button class="tool-btn" title="Exporter" onclick="exportAndCopy()">⭳</button>
-            <button class="tool-btn" title="Importer" onclick="smartImport()">⭱</button>
+            <button class="tool-btn" title="Exporter JSON" onclick="exportAndCopy()">⭳</button>
+            <button class="tool-btn" title="Importer JSON" onclick="smartImport()">⭱</button>
             <button class="tool-btn" title="Rétro-Matriçage" onclick="exportToSheet()">◈</button>
             <input type="file" id="import-input" style="display:none" onchange="importMatrixFile(event)">
         </div>
@@ -80,7 +70,7 @@
 <div id="main-container"></div>
 
 <script>
-    const HTML_VERSION = "4.1";
+    const HTML_VERSION = "4.2.0";
     const PROXY_URL = "https://script.google.com/macros/s/AKfycbyh6DHFtArE5EhPoz3bC9nwp_Fbuv4q_AA-7ICpl8LUMnAJiUrWqc6B_BQDNrVYCtLskQ/exec";
     let globalMatrix = [], currentSheetName = "", currentR = 0, currentC = 0;
     let clickCount = 0, clickTimer = null, arrowTimer = null, lastTapTime = 0;
@@ -96,42 +86,21 @@
         loader.style.display = 'flex';
         loader.style.opacity = '1';
         bar.style.width = "10%";
-        sLeft.innerText = "Ø";
+        sLeft.innerText = "INIT";
 
         try {
             const url = name ? `${PROXY_URL}?sheet=${encodeURIComponent(name)}` : PROXY_URL;
             const res = await fetch(url);
             bar.style.width = "40%";
-
             const data = await res.json();
             
-            // Extraction des tokens réels du JSON
-            const rawText = JSON.stringify(data).replace(/[^a-zA-ZÀ-ÿ]/g, ' ');
-            const tokens = rawText.split(/\s+/).filter(t => t.length > 4);
-
-            let i = 0;
-            const flash = setInterval(() => {
-                if (i < tokens.length) {
-                    sLeft.innerText = tokens[i] || "";
-                    sRight.innerText = tokens[i+1] || "";
-                    i += 2;
-                }
-            }, 80);
-
-            currentSheetName = data.sheetName;
-            globalMatrix = data.matrix;
-            render(); buildOutline();
+            processData(data);
             
             bar.style.width = "100%";
-            clearInterval(flash);
-
-            // Métadonnées finales réelles
             sLeft.innerText = "STRATE:" + data.sheetName.toUpperCase();
             sRight.innerText = "VER:" + data.version;
 
             setTimeout(() => {
-                const loadTime = performance.now();
-                console.log(`%c [SYSTEM] Matrice installée en ${(loadTime / 1000).toFixed(2)}s`, "color: #00ff00; font-weight: bold;");
                 loader.style.opacity = '0';
                 setTimeout(() => loader.style.display = 'none', 400);
             }, 600);
@@ -140,8 +109,16 @@
         } catch (e) { 
             console.error(e);
             sLeft.innerText = "ERR";
-            sRight.innerText = "CONX";
+            sRight.innerText = "OFFLINE";
+            setTimeout(() => { loader.style.display = 'none'; }, 2000);
         }
+    }
+
+    function processData(data) {
+        currentSheetName = data.sheetName;
+        globalMatrix = data.matrix;
+        render(); 
+        buildOutline();
     }
 
     function render() {
@@ -215,10 +192,53 @@
         arrowTimer = setTimeout(() => { arrows.forEach(a => a.classList.remove('visible')); }, 3000); 
     }
 
+    // --- FONCTIONS D'IMPORT / EXPORT ---
+
+    function exportAndCopy() {
+        const dataStr = JSON.stringify({
+            sheetName: currentSheetName,
+            matrix: globalMatrix,
+            version: HTML_VERSION
+        }, null, 2);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `Matrice_${currentSheetName}_v${HTML_VERSION}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function smartImport() {
+        document.getElementById('import-input').click();
+    }
+
+    function importMatrixFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                processData(data);
+                window.jumpTo(0, 0);
+                alert("Matrice importée avec succès.");
+            } catch (err) {
+                alert("Erreur lors de la lecture du fichier JSON.");
+            }
+        };
+        reader.readAsText(file);
+    }
+
     async function exportToSheet() {
         try {
-            const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ sheetName: currentSheetName, matrix: globalMatrix }) });
-            alert(await res.text());
+            const res = await fetch(PROXY_URL, { 
+                method: 'POST', 
+                mode: 'no-cors',
+                body: JSON.stringify({ sheetName: currentSheetName, matrix: globalMatrix }) 
+            });
+            alert("Requête de Rétro-Matriçage envoyée.");
         } catch (e) { alert("Erreur Rétro-Matriçage"); }
     }
 
@@ -226,6 +246,7 @@
         const content = document.getElementById('outline-content');
         const minimap = document.getElementById('matrix-minimap');
         content.innerHTML = ""; minimap.innerHTML = "";
+        if (!globalMatrix.length) return;
         minimap.style.gridTemplateColumns = `repeat(${globalMatrix[0].length}, 1fr)`;
         globalMatrix.forEach((row, rIdx) => {
             row.forEach((cell, cIdx) => {
@@ -236,7 +257,7 @@
                     item.className = "outline-item";
                     item.style.marginLeft = (cIdx * 20) + "px";
                     const temp = document.createElement("div"); temp.innerHTML = cell.htmlContent;
-                    item.innerText = temp.innerText.trim().substring(0, 50);
+                    item.innerText = temp.innerText.trim().substring(0, 50) || `[Cellule ${rIdx},${cIdx}]`;
                     item.onclick = () => { window.jumpTo(rIdx, cIdx); document.getElementById('outline-panel').classList.remove('open'); };
                     content.appendChild(item);
                 } else dot.className = "map-dot";
