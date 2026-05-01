@@ -2,231 +2,256 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Labyrinthe Panoptique</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LabyBlog Officiel</title>
     <style>
-        :root { 
-            --bg: #0a0a0a; 
-            --phone: #ffffff; 
-            --text: #1a1a1a; 
-        }
-        
-        body, html { 
-            margin: 0; padding: 0; height: 100%; width: 100%; 
-            background: var(--bg); display: flex; align-items: center; justify-content: center; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        :root {
+            --primary: #2196F3;
         }
 
-        #phone-shell { 
-            height: 85vh; aspect-ratio: 9 / 19; background: var(--phone); 
-            border: 12px solid #1a1a1a; border-radius: 40px; 
-            position: relative; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        body, html {
+            margin: 0; padding: 0;
+            height: 100%; width: 100%;
+            overflow: hidden;
+            background-color: #f8f9fa;
+            font-family: sans-serif;
         }
 
-        /* CONTENEUR DE SCROLL VERTICAL */
+        /* Système de navigation plein écran */
         #viewport-y {
-            height: 100%;
-            overflow-y: auto;
+            width: 100vw;
+            height: 100vh;
+            overflow-y: scroll;
             scroll-snap-type: y mandatory;
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE/Edge */
+            scroll-behavior: smooth;
+            -ms-overflow-style: none; scrollbar-width: none;
         }
-        #viewport-y::-webkit-scrollbar { display: none; } /* Chrome/Safari */
 
-        /* CONTENEUR DE LIGNE (HORIZONTAL) */
         .row-container {
             display: flex;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             position: relative;
+            scroll-snap-align: start;
         }
 
         .viewport-x {
             display: flex;
-            overflow-x: auto;
+            width: 100vw;
+            height: 100vh;
+            overflow-x: scroll;
             scroll-snap-type: x mandatory;
-            width: 100%;
-            height: 100%;
-            scrollbar-width: none;
-        }
-        .viewport-x::-webkit-scrollbar { display: none; }
-
-        /* ZONE DE TEXTE ALIGNÉE EN HAUT À GAUCHE */
-        .slide { 
-            min-width: 100%;
-            height: 100%;
-            scroll-snap-align: start;
-            flex-shrink: 0;
-            display: flex; 
-            flex-direction: column; 
-            justify-content: flex-start; 
-            text-align: left; 
-            padding: 100px 35px 40px 35px; 
-            box-sizing: border-box;
-            color: var(--text);
-            font-size: 1.1rem;
-            line-height: 1.5;
+            scroll-behavior: smooth;
+            -ms-overflow-style: none; scrollbar-width: none;
         }
 
-        /* FLÈCHES DE NAVIGATION */
-        .nav-arrow { 
-            position: absolute !important; 
-            width: 44px; 
-            height: 44px; 
-            border-radius: 50%; 
-            background: rgba(255, 255, 255, 0.9);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-            border: 1px solid #ddd;
-            margin: 0 !important;
-            padding: 0 !important;
-            z-index: 1000;
-            display: none; /* Caché par défaut */
-            align-items: center;
+        ::-webkit-scrollbar { display: none; }
+
+        .slide {
+            flex: 0 0 100vw;
+            height: 100vh;
+            display: flex;
             justify-content: center;
-            cursor: pointer;
-            font-size: 1.2rem;
-            transition: background 0.2s;
+            align-items: center;
+            scroll-snap-align: start;
+            background: white;
+            box-sizing: border-box;
+            padding: 50px;
         }
 
-        .nav-arrow:hover { background: #fff; }
+        /* Rendu du texte et des liens */
+        .content {
+            max-width: 1000px;
+            width: 100%;
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .content a {
+            color: inherit;
+            text-decoration: underline;
+            transition: opacity 0.2s;
+        }
+        
+        .content a:hover { opacity: 0.7; }
+
+        /* FLÈCHES STABLES */
+        .nav-arrow {
+            position: fixed; 
+            background: rgba(0,0,0,0.1); 
+            border: none;
+            width: 55px; height: 55px; border-radius: 50%;
+            cursor: pointer; display: none; align-items: center; justify-content: center;
+            z-index: 100; font-size: 28px; color: #333; 
+            transition: all 0.2s;
+        }
+        
         .nav-arrow.visible { display: flex; }
+        .nav-arrow:hover { background: var(--primary); color: white; }
 
-        /* POSITIONNEMENT STRICT */
-        .arrow-up { top: 20px; left: 50%; transform: translateX(-50%); }
-        .arrow-down { bottom: 20px; left: 50%; transform: translateX(-50%); }
-        .arrow-left { left: 15px; top: 50%; transform: translateY(-50%); }
-        .arrow-right { right: 15px; top: 50%; transform: translateY(-50%); }
+        .arrow-up { top: 20px; left: 50%; translate: -50% 0; }
+        .arrow-down { bottom: 20px; left: 50%; translate: -50% 0; }
+        .arrow-left { left: 20px; top: 50%; translate: 0 -50%; }
+        .arrow-right { right: 20px; top: 50%; translate: 0 -50%; }
 
-        .ai-loading { color: #888; font-style: italic; }
+        /* Sidebar Mode Plan (Cheat Code) */
+        #plan-sidebar {
+            position: fixed;
+            right: -320px; top: 0;
+            width: 320px; height: 100%;
+            background: white;
+            z-index: 200;
+            transition: right 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            overflow-y: auto;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+            padding: 25px; box-sizing: border-box;
+        }
+        #plan-sidebar.debug-mode { right: 0; }
+        .nav-item { 
+            padding: 12px; cursor: pointer; border-bottom: 1px solid #f0f0f0; 
+            font-size: 0.85rem; color: #555;
+        }
+        .nav-item:hover { background: #f0f7ff; color: var(--primary); }
+        .nav-item.active { background: #e3f2fd; font-weight: bold; color: #0d47a1; }
     </style>
 </head>
 <body>
 
-    <div id="phone-shell">
-        <button id="v-up" class="nav-arrow arrow-up" onclick="moveV(-1)">↑</button>
-        <button id="v-down" class="nav-arrow arrow-down" onclick="moveV(1)">↓</button>
-        <div id="viewport-y"></div>
-    </div>
+<!-- Navigation Harmonisée -->
+<button id="v-up" class="nav-arrow arrow-up" onclick="moveVertical(-1)">▲</button>
+<button id="v-down" class="nav-arrow arrow-down" onclick="moveVertical(1)">▼</button>
+<button id="h-left" class="nav-arrow arrow-left" onclick="moveHorizontal(-1)">◀</button>
+<button id="h-right" class="nav-arrow arrow-right" onclick="moveHorizontal(1)">▶</button>
+
+<div id="viewport-y"></div>
+
+<div id="plan-sidebar">
+    <h2 style="margin-top:0; font-size:1.2rem; border-bottom: 2px solid var(--primary); padding-bottom:10px;">Structure du Blog</h2>
+    <div id="plan-list"></div>
+</div>
 
 <script>
-    const PROXY_URL = "https://script.google.com/macros/s/AKfycbz2c1H5uA6CLdYRYe5BsV6UkMEmsOS2MVT2cVGo00W--xIt1taP3ZTQxfNGLn63nuHe-w/exec"; 
+    const PROXY_URL = "https://script.google.com/macros/s/AKfycbyh6DHFtArE5EhPoz3bC9nwp_Fbuv4q_AA-7ICpl8LUMnAJiUrWqc6B_BQDNrVYCtLskQ/exec";
     let globalMatrix = [];
-    let curR = 0, curC = 0;
+    let currentR = 0, currentC = 0;
+    let inputLog = "";
 
-    async function askGemini(prompt, elementId) {
+    // Cheat Code & Clavier
+    window.addEventListener("keydown", (e) => {
+        inputLog += e.key;
+        if (inputLog.includes("1234")) {
+            document.getElementById("plan-sidebar").classList.toggle("debug-mode");
+            inputLog = "";
+        }
+        if(e.key === "ArrowUp") moveVertical(-1);
+        if(e.key === "ArrowDown") moveVertical(1);
+        if(e.key === "ArrowLeft") moveHorizontal(-1);
+        if(e.key === "ArrowRight") moveHorizontal(1);
+    });
+
+    function moveVertical(dir) {
+        const target = document.getElementById(`s-${currentR + dir}-${currentC}`);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function moveHorizontal(dir) {
+        const target = document.getElementById(`s-${currentR}-${currentC + dir}`);
+        if (target) target.scrollIntoView({ behavior: 'smooth', inline: 'start' });
+    }
+
+    async function load() {
         try {
-            const response = await fetch(`${PROXY_URL}?prompt=${encodeURIComponent(prompt)}`);
-            const text = await response.text();
-            document.getElementById(elementId).innerHTML = text;
+            const res = await fetch(PROXY_URL);
+            globalMatrix = await res.json();
+            render();
         } catch (e) {
-            document.getElementById(elementId).innerHTML = "Le Sphinx est fatigué, réessayez plus tard.";
+            console.error("Erreur de chargement:", e);
         }
     }
 
-async function askGemini(prompt, elementId) {
-    const el = document.getElementById(elementId);
-    const startTime = Date.now(); // Lancement du chrono
-    let timerInterval;
-
-    try {
-        // Affichage initial avec chronomètre actif
-        el.innerHTML = `<div class="ai-status">
-            <span class="spinner"></span> 
-            Le Sphinx réfléchit... <span id="timer-${elementId}">0.0s</span>
-        </div>`;
-
-        // Mise à jour du chrono toutes les 100ms
-        timerInterval = setInterval(() => {
-            const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-            const timerEl = document.getElementById(`timer-${elementId}`);
-            if (timerEl) timerEl.innerText = elapsed + "s";
-        }, 100);
-
-        const response = await fetch(`${PROXY_URL}?prompt=${encodeURIComponent(prompt)}`, {
-            method: 'GET',
-            cache: 'no-cache'
-        });
-
-        const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-        clearInterval(timerInterval);
-
-        if (!response.ok) {
-            // Gestion des erreurs HTTP (404, 429, 503, etc.)
-            const errorText = await response.text();
-            throw { status: response.status, message: errorText };
-        }
-
-        const text = await response.text();
+    function render() {
+        const container = document.getElementById('viewport-y');
+        const plan = document.getElementById('plan-list');
+        container.innerHTML = "";
+        plan.innerHTML = "";
         
-        // Affichage du résultat avec le temps de réponse final en petit
-        el.innerHTML = `${text} <br><small style="color:#ccc; font-size:0.7rem;">(Réponse en ${duration}s)</small>`;
+        globalMatrix.forEach((row, rIdx) => {
+            const rowBlock = document.createElement('div');
+            rowBlock.className = 'row-container';
+            const sliderX = document.createElement('div');
+            sliderX.className = 'viewport-x';
+            
+            row.forEach((cell, cIdx) => {
+                const sId = `s-${rIdx}-${cIdx}`;
+                const slide = document.createElement('div');
+                slide.className = 'slide';
+                slide.id = sId;
+                slide.dataset.r = rIdx; 
+                slide.dataset.c = cIdx;
 
-    } catch (e) {
-        clearInterval(timerInterval);
-        console.error("Erreur détaillée:", e);
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'content';
+                
+                // Traitement des données riches reçues
+                if (cell && typeof cell === 'object') {
+                    contentDiv.innerHTML = cell.htmlContent || "";
+                    if(cell.fontSize) contentDiv.style.fontSize = cell.fontSize + "pt";
+                    if(cell.fontColor) contentDiv.style.color = cell.fontColor;
+                    contentDiv.style.fontWeight = cell.isBold ? "bold" : "normal";
+                    contentDiv.style.fontStyle = cell.isItalic ? "italic" : "normal";
+                    if(cell.fontFamily) contentDiv.style.fontFamily = cell.fontFamily;
+                } else {
+                    contentDiv.innerText = cell || "";
+                }
 
-        let errorMessage = "Erreur inconnue";
-        let helpTip = "Réessayez dans quelques instants.";
+                slide.appendChild(contentDiv);
+                sliderX.appendChild(slide);
 
-        // Traduction des codes d'erreur pour l'utilisateur
-        if (e.status === 503) {
-            errorMessage = "CODE 503 : SERVEUR SATURÉ";
-            helpTip = "Google reçoit trop de demandes. Le Sphinx fait la sieste, retentez sa chance dans 30 secondes.";
-        } else if (e.status === 429) {
-            errorMessage = "CODE 429 : QUOTA DÉPASSÉ";
-            helpTip = "Trop de requêtes rapides ou plafond budgétaire atteint.";
-        } else if (e.status === 404) {
-            errorMessage = "CODE 404 : MODÈLE INTROUVABLE";
-            helpTip = "Vérifiez le nom du modèle dans votre Google Script.";
-        } else if (e.status === 400) {
-            errorMessage = "CODE 400 : CLÉ API INVALIDE";
-            helpTip = "Votre clé API est expirée ou mal configurée.";
-        }
-
-        el.innerHTML = `
-            <div class="error-box">
-                <strong>${errorMessage}</strong><br>
-                <small>${helpTip}</small><br>
-                <button onclick="location.reload()" style="margin-top:5px; font-size:0.7rem;">Rafraîchir la page</button>
-            </div>`;
-    }
-}
-
-    function moveV(dir) {
-        const target = document.getElementById(`s-${curR+dir}-${curC}`);
-        if(target) target.scrollIntoView({behavior:'smooth'});
-    }
-
-    function moveH(dir) {
-        const target = document.getElementById(`s-${curR}-${curC+dir}`);
-        if(target) target.scrollIntoView({behavior:'smooth'});
-    }
-
-    function setupObs() {
-        const obs = new IntersectionObserver((entries) => {
-            entries.forEach(e => {
-                if(e.isIntersecting) {
-                    curR = parseInt(e.target.dataset.r);
-                    curC = parseInt(e.target.dataset.c);
-                    updateUI();
+                // Construction du plan latéral
+                const rawText = cell.htmlContent ? cell.htmlContent.replace(/<[^>]*>/g, '') : cell.toString();
+                if (rawText.trim() !== "") {
+                    const navItem = document.createElement('div');
+                    navItem.className = 'nav-item';
+                    navItem.id = `nav-item-${sId}`;
+                    navItem.innerText = rawText.substring(0, 40) + (rawText.length > 40 ? "..." : "");
+                    navItem.onclick = () => document.getElementById(sId).scrollIntoView({behavior:'smooth'});
+                    plan.appendChild(navItem);
                 }
             });
-        }, { root: document.querySelector('#phone-shell'), threshold: 0.6 });
-        document.querySelectorAll('.slide').forEach(s => obs.observe(s));
+            rowBlock.appendChild(sliderX);
+            container.appendChild(rowBlock);
+        });
+        setupObserver();
     }
 
-    function updateUI() {
-        const check = (r, c) => globalMatrix[r] && globalMatrix[r][c] && globalMatrix[r][c].toString().trim();
-        
-        // Flèches verticales
-        document.getElementById('v-up').classList.toggle('visible', !!check(curR-1, curC));
-        document.getElementById('v-down').classList.toggle('visible', !!check(curR+1, curC));
-        
-        // Flèches horizontales
-        document.querySelectorAll('.arrow-left, .arrow-right').forEach(a => a.classList.remove('visible'));
-        const al = document.getElementById(`arr-l-${curR}`);
-        const ar = document.getElementById(`arr-r-${curR}`);
-        if(al) al.classList.toggle('visible', !!check(curR, curC-1));
-        if(ar) ar.classList.toggle('visible', !!check(curR, curC+1));
+    function setupObserver() {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    currentR = parseInt(entry.target.dataset.r);
+                    currentC = parseInt(entry.target.dataset.c);
+                    
+                    // Vérification des voisins
+                    const hasUp = currentR > 0 && globalMatrix[currentR-1][currentC] && (globalMatrix[currentR-1][currentC].htmlContent || globalMatrix[currentR-1][currentC].toString()).trim() !== "";
+                    const hasDown = currentR < globalMatrix.length - 1 && globalMatrix[currentR+1][currentC] && (globalMatrix[currentR+1][currentC].htmlContent || globalMatrix[currentR+1][currentC].toString()).trim() !== "";
+                    const hasLeft = currentC > 0 && globalMatrix[currentR][currentC-1] && (globalMatrix[currentR][currentC-1].htmlContent || globalMatrix[currentR][currentC-1].toString()).trim() !== "";
+                    const hasRight = currentC < globalMatrix[currentR].length - 1 && globalMatrix[currentR][currentC+1] && (globalMatrix[currentR][currentC+1].htmlContent || globalMatrix[currentR][currentC+1].toString()).trim() !== "";
+
+                    // Mise à jour des flèches
+                    document.getElementById('v-up').classList.toggle('visible', !!hasUp);
+                    document.getElementById('v-down').classList.toggle('visible', !!hasDown);
+                    document.getElementById('h-left').classList.toggle('visible', !!hasLeft);
+                    document.getElementById('h-right').classList.toggle('visible', !!hasRight);
+
+                    // Mise à jour visuelle du plan
+                    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                    const activeNav = document.getElementById(`nav-item-s-${currentR}-${currentC}`);
+                    if(activeNav) activeNav.classList.add('active');
+                }
+            });
+        }, { threshold: 0.6 });
+
+        document.querySelectorAll('.slide').forEach(s => observer.observe(s));
     }
 
     load();
