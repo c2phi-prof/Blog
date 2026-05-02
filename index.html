@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LabyBlog v4.5.3 - Matrix Protocol Engine</title>
+    <title>Machine abstraite à matrice de texte v4.6.1</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700&family=Inter:wght@300;400&display=swap" rel="stylesheet">
     <style>
@@ -24,16 +24,12 @@
         .outline-item.active { border-left-color: #000; background: #fff; color: #000; font-weight: bold; }
         #hud-minimap { position: fixed; bottom: 20px; right: 20px; z-index: 500; pointer-events: none; opacity: 0; transition: opacity 0.3s; background: rgba(255,255,255,0.6); padding: 4px; border: 1px solid #ddd; }
         #hud-minimap.visible { opacity: 0.4; }
-        .slide { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; box-sizing: border-box; padding: 40px; overflow-y: auto; }
-        .slide.active { display: flex; justify-content: center; align-items: center; } 
-        .content { width: 100%; line-height: 1.6; font-size: 1.2rem; outline: none; text-align: center; font-family: 'Inconsolata', monospace; color: var(--text); user-select: none; -webkit-user-select: none; }
+        .slide { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; box-sizing: border-box; padding: 60px; overflow-y: auto; }
+        .slide.active { display: flex; justify-content: center; align-items: flex-start; } 
+        .content { width: 100%; max-width: 800px; line-height: 1.6; font-size: 1.2rem; outline: none; text-align: left; font-family: 'Inconsolata', monospace; color: var(--text); user-select: none; -webkit-user-select: none; margin-top: 10vh; }
         .content.editing { background-color: rgba(255,255,255,0.8); padding: 20px; border-radius: 8px; user-select: text; -webkit-user-select: text; caret-color: var(--text); }
         .nav-arrow { position: fixed; background: rgba(255, 255, 255, 0.3); border: none; font-size: 40px; color: #000; z-index: 100; display: none; align-items: center; justify-content: center; width: 60px; height: 60px; border-radius: 50%; opacity: 0; transition: opacity 0.8s ease; }
         .nav-arrow.visible { display: flex; opacity: 0.15; } 
-        .arrow-up { top: 10px; left: 50%; transform: translateX(-50%); }
-        .arrow-down { bottom: 10px; left: 50%; transform: translateX(-50%); }
-        .arrow-left { left: 10px; top: 50%; transform: translateY(-50%); }
-        .arrow-right { right: 10px; top: 50%; transform: translateY(-50%); }
         #loader { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #fff; display: flex; align-items: center; justify-content: center; z-index: 2000; transition: opacity 0.2s ease; }
         #progress-line { height: 1px; background: #000; width: 0%; transition: width 0.1s linear; }
     </style>
@@ -59,48 +55,42 @@
     </div>
     <div id="outline-content"></div>
 </div>
-<button id="v-up" class="nav-arrow arrow-up">▲</button>
-<button id="v-down" class="nav-arrow arrow-down">▼</button>
-<button id="h-left" class="nav-arrow arrow-left">◀</button>
-<button id="h-right" class="nav-arrow arrow-right">▶</button>
+<button id="v-up" class="nav-arrow" style="top:10px; left:50%; transform:translateX(-50%);">▲</button>
+<button id="v-down" class="nav-arrow" style="bottom:10px; left:50%; transform:translateX(-50%);">▼</button>
+<button id="h-left" class="nav-arrow" style="left:10px; top:50%; transform:translateY(-50%);">◀</button>
+<button id="h-right" class="nav-arrow" style="right:10px; top:50%; transform:translateY(-50%);">▶</button>
 <div id="main-container"></div>
 
 <script>
-    const HTML_VERSION = "4.5.3";
+    const HTML_VERSION = "4.6.1";
     const PROXY_URL = "https://script.google.com/macros/s/AKfycbyh6DHFtArE5EhPoz3bC9nwp_Fbuv4q_AA-7ICpl8LUMnAJiUrWqc6B_BQDNrVYCtLskQ/exec";
     let globalMatrix = [], currentSheetName = "", currentR = 0, currentC = 0;
     let clickCount = 0, clickTimer = null, lastTapTime = 0, isEditMode = false, moveHistory = [], undoStack = [];
 
-    // --- INTERCEPTEUR DE PROTOCOLE MATRICE ---
     const renderer = new marked.Renderer();
     renderer.link = (arg1, arg2, arg3) => {
         let href = typeof arg1 === 'object' ? arg1.href : arg1;
         let text = typeof arg1 === 'object' ? arg1.text : arg3;
         if (href && typeof href === 'string' && href.startsWith('matrice://')) {
-            const cleanHref = decodeURIComponent(href.replace('matrice://', ''));
-            const parts = cleanHref.split('/');
-            return `<a href="#" onclick="window.loadStrate('${parts[0]}',${parts[1]},${parts[2]});return false;">${text}</a>`;
+            const parts = href.replace('matrice://', '').split('/');
+            return `<a href="#" onclick="window.loadStrate('${decodeURIComponent(parts[0])}',${parts[1]},${parts[2]});return false;">${text}</a>`;
         }
         return `<a href="${href}" target="_blank">${text}</a>`;
     };
     marked.setOptions({ renderer: renderer, gfm: true, breaks: true });
 
-    window.loadStrate = async function(name, r, c) {
-        if (name !== currentSheetName) await load(name);
-        setTimeout(() => window.jumpTo(parseInt(r), parseInt(c)), 400);
-    };
+    window.loadStrate = async function(name, r, c) { await load(name); setTimeout(() => window.jumpTo(parseInt(r), parseInt(c)), 400); };
 
     function updateArrows(r, c) {
         const has = (row, col) => globalMatrix[row] && globalMatrix[row][col];
         const cfg = {'v-up': has(r-1,c), 'v-down': has(r+1,c), 'h-left': has(r,c-1), 'h-right': has(r,c+1)};
-        for (let id in cfg) { 
-            const btn = document.getElementById(id);
-            if(btn) { btn.dataset.exists = !!cfg[id]; btn.style.display = 'flex'; btn.style.opacity = cfg[id] ? "0.15" : "0.02"; }
-        }
-        const arrows = document.querySelectorAll('.nav-arrow');
-        arrows.forEach(a => a.classList.add('visible'));
+        document.querySelectorAll('.nav-arrow').forEach(a => {
+            const id = a.id; a.dataset.exists = !!cfg[id];
+            a.style.display = 'flex'; a.style.opacity = cfg[id] ? "0.15" : "0.02";
+            a.classList.add('visible');
+        });
         clearTimeout(window.arrowTimer);
-        window.arrowTimer = setTimeout(() => { arrows.forEach(a => a.classList.remove('visible')); }, 2000);
+        window.arrowTimer = setTimeout(() => document.querySelectorAll('.nav-arrow').forEach(a => a.classList.remove('visible')), 2000);
     }
 
     window.jumpTo = function(r, c) {
@@ -220,9 +210,9 @@
             link.download = `Matrice_${currentSheetName}.json`; link.click();
         };
         document.getElementById('btn-exp-log').onclick = () => {
-            const logData = { meta: { role: "Machine Virtuelle Textuelle", version: HTML_VERSION }, matrix: globalMatrix, history: moveHistory };
+            const logData = { meta: { role: "Machine abstraite à matrice de texte", version: HTML_VERSION }, matrix: globalMatrix, history: moveHistory };
             const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([JSON.stringify(logData, null, 2)], { type: "application/json" }));
-            link.download = `AI_LOG_${currentSheetName}.json`; link.click();
+            link.download = `LOG_${currentSheetName}.json`; link.click();
         };
         document.getElementById('btn-imp').onclick = () => document.getElementById('import-input').click();
         document.getElementById('import-input').onchange = (e) => {
