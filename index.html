@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LabyBlog v4.5.2 - Robust Multivers Engine</title>
+    <title>LabyBlog v4.5.3 - Matrix Protocol Engine</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700&family=Inter:wght@300;400&display=swap" rel="stylesheet">
     <style>
@@ -17,7 +17,7 @@
         .map-dot { width: 14px; height: 14px; background-color: #fff; border-radius: 1px; }
         .map-dot.occupied { background-color: #bbb; cursor: pointer; }
         .map-dot.current { background-color: var(--text); }
-        .tool-btn { width: 45px; height: 45px; background: #fff; border: 1px solid #ddd; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: #777; }
+        .tool-btn { width: 45px; height: 45px; background: #fff; border: 1px solid #ddd; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: #777; transition: all 0.2s; }
         .tool-btn.active { color: #000; border-color: #000; background: #f0f0f0; }
         #outline-content { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; border-top: 1px solid #eee; padding-top: 10px; }
         .outline-item { cursor: pointer; padding: 12px; border-left: 2px solid #eee; background: #f9f9f9; font-size: 0.8rem; color: #666; }
@@ -66,23 +66,29 @@
 <div id="main-container"></div>
 
 <script>
-    const HTML_VERSION = "4.5.2";
+    const HTML_VERSION = "4.5.3";
     const PROXY_URL = "https://script.google.com/macros/s/AKfycbyh6DHFtArE5EhPoz3bC9nwp_Fbuv4q_AA-7ICpl8LUMnAJiUrWqc6B_BQDNrVYCtLskQ/exec";
     let globalMatrix = [], currentSheetName = "", currentR = 0, currentC = 0;
     let clickCount = 0, clickTimer = null, lastTapTime = 0, isEditMode = false, moveHistory = [], undoStack = [];
 
-    // --- ROBUST MARKED RENDERER ---
+    // --- INTERCEPTEUR DE PROTOCOLE MATRICE ---
     const renderer = new marked.Renderer();
     renderer.link = (arg1, arg2, arg3) => {
         let href = typeof arg1 === 'object' ? arg1.href : arg1;
         let text = typeof arg1 === 'object' ? arg1.text : arg3;
-        if (href && typeof href === 'string' && href.startsWith('laby://')) {
-            const parts = href.replace('laby://', '').split('/');
-            return `<a href="#" onclick="window.loadStrate('${decodeURIComponent(parts[0])}',${parts[1]},${parts[2]});return false;">${text}</a>`;
+        if (href && typeof href === 'string' && href.startsWith('matrice://')) {
+            const cleanHref = decodeURIComponent(href.replace('matrice://', ''));
+            const parts = cleanHref.split('/');
+            return `<a href="#" onclick="window.loadStrate('${parts[0]}',${parts[1]},${parts[2]});return false;">${text}</a>`;
         }
         return `<a href="${href}" target="_blank">${text}</a>`;
     };
     marked.setOptions({ renderer: renderer, gfm: true, breaks: true });
+
+    window.loadStrate = async function(name, r, c) {
+        if (name !== currentSheetName) await load(name);
+        setTimeout(() => window.jumpTo(parseInt(r), parseInt(c)), 400);
+    };
 
     function updateArrows(r, c) {
         const has = (row, col) => globalMatrix[row] && globalMatrix[row][col];
@@ -111,8 +117,6 @@
             document.querySelectorAll(`.map-dot[data-pos="${r}-${c}"]`).forEach(d => d.classList.add('current'));
         }
     };
-
-    window.loadStrate = async function(name, r, c) { await load(name); setTimeout(() => window.jumpTo(r, c), 400); };
 
     function moveDir(r, c) {
         const nR = currentR + r, nC = currentC + c;
