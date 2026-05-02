@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Machine abstraite à matrice de texte v4.6.1</title>
+    <title>Machine abstraite à matrice de texte v4.7.0</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700&family=Inter:wght@300;400&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #eeeeee; --text: #333; --accent: #FFD700; }
+        :root { --bg: #eeeeee; --text: #333; --accent: #FFD700; --danger: #e74c3c; }
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background-color: #ffffff; font-family: 'Inter', sans-serif; touch-action: none; }
         #main-container { width: 100vw; height: 100vh; position: relative; z-index: 1; }
         #system-panel { position: fixed; top: 0; left: -100vw; width: 100vw; height: 100vh; background: #fcfcfc; z-index: 1000; transition: left 0.3s ease; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; }
@@ -28,15 +28,20 @@
         .slide.active { display: flex; justify-content: center; align-items: flex-start; } 
         .content { width: 100%; max-width: 800px; line-height: 1.6; font-size: 1.2rem; outline: none; text-align: left; font-family: 'Inconsolata', monospace; color: var(--text); user-select: none; -webkit-user-select: none; margin-top: 10vh; }
         .content.editing { background-color: rgba(255,255,255,0.8); padding: 20px; border-radius: 8px; user-select: text; -webkit-user-select: text; caret-color: var(--text); }
-        .nav-arrow { position: fixed; background: rgba(255, 255, 255, 0.3); border: none; font-size: 40px; color: #000; z-index: 100; display: none; align-items: center; justify-content: center; width: 60px; height: 60px; border-radius: 50%; opacity: 0; transition: opacity 0.8s ease; }
+        
+        .nav-arrow { position: fixed; background: rgba(255, 255, 255, 0.3); border: none; font-size: 40px; color: #000; z-index: 100; display: none; align-items: center; justify-content: center; width: 60px; height: 60px; border-radius: 50%; opacity: 0; transition: opacity 0.4s ease, color 0.3s ease; cursor: pointer; }
         .nav-arrow.visible { display: flex; opacity: 0.15; } 
+        .nav-arrow.invalid-edit { color: var(--danger) !important; opacity: 0.4 !important; }
+        
         #loader { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #fff; display: flex; align-items: center; justify-content: center; z-index: 2000; transition: opacity 0.2s ease; }
         #progress-line { height: 1px; background: #000; width: 0%; transition: width 0.1s linear; }
     </style>
 </head>
-<body>
+<body onmousemove="resetArrowTimer()" ontouchstart="resetArrowTimer()">
+
 <div id="loader"><div style="width:300px; background:#eee; height:1px;"><div id="progress-line"></div></div></div>
 <div id="hud-minimap"></div>
+
 <div id="system-panel">
     <div class="system-header">
         <div style="display:flex; justify-content: space-between; align-items: flex-start;">
@@ -55,14 +60,16 @@
     </div>
     <div id="outline-content"></div>
 </div>
+
 <button id="v-up" class="nav-arrow" style="top:10px; left:50%; transform:translateX(-50%);">▲</button>
 <button id="v-down" class="nav-arrow" style="bottom:10px; left:50%; transform:translateX(-50%);">▼</button>
 <button id="h-left" class="nav-arrow" style="left:10px; top:50%; transform:translateY(-50%);">◀</button>
 <button id="h-right" class="nav-arrow" style="right:10px; top:50%; transform:translateY(-50%);">▶</button>
+
 <div id="main-container"></div>
 
 <script>
-    const HTML_VERSION = "4.6.1";
+    const HTML_VERSION = "4.7.0";
     const PROXY_URL = "https://script.google.com/macros/s/AKfycbyh6DHFtArE5EhPoz3bC9nwp_Fbuv4q_AA-7ICpl8LUMnAJiUrWqc6B_BQDNrVYCtLskQ/exec";
     let globalMatrix = [], currentSheetName = "", currentR = 0, currentC = 0;
     let clickCount = 0, clickTimer = null, lastTapTime = 0, isEditMode = false, moveHistory = [], undoStack = [];
@@ -72,25 +79,42 @@
         let href = typeof arg1 === 'object' ? arg1.href : arg1;
         let text = typeof arg1 === 'object' ? arg1.text : arg3;
         if (href && typeof href === 'string' && href.startsWith('matrice://')) {
-            const parts = href.replace('matrice://', '').split('/');
-            return `<a href="#" onclick="window.loadStrate('${decodeURIComponent(parts[0])}',${parts[1]},${parts[2]});return false;">${text}</a>`;
+            const parts = decodeURIComponent(href.replace('matrice://', '')).split('/');
+            return `<a href="#" onclick="window.loadStrate('${parts[0]}',${parts[1]},${parts[2]});return false;">${text}</a>`;
         }
         return `<a href="${href}" target="_blank">${text}</a>`;
     };
     marked.setOptions({ renderer: renderer, gfm: true, breaks: true });
 
-    window.loadStrate = async function(name, r, c) { await load(name); setTimeout(() => window.jumpTo(parseInt(r), parseInt(c)), 400); };
+    function resetArrowTimer() {
+        if (isEditMode) return; 
+        const arrows = document.querySelectorAll('.nav-arrow');
+        arrows.forEach(a => { if (a.dataset.exists === "true") a.classList.add('visible'); });
+        clearTimeout(window.arrowTimer);
+        window.arrowTimer = setTimeout(() => {
+            arrows.forEach(a => a.classList.remove('visible'));
+        }, 2500);
+    }
 
     function updateArrows(r, c) {
         const has = (row, col) => globalMatrix[row] && globalMatrix[row][col];
-        const cfg = {'v-up': has(r-1,c), 'v-down': has(r+1,c), 'h-left': has(r,c-1), 'h-right': has(r,c+1)};
-        document.querySelectorAll('.nav-arrow').forEach(a => {
-            const id = a.id; a.dataset.exists = !!cfg[id];
-            a.style.display = 'flex'; a.style.opacity = cfg[id] ? "0.15" : "0.02";
-            a.classList.add('visible');
-        });
-        clearTimeout(window.arrowTimer);
-        window.arrowTimer = setTimeout(() => document.querySelectorAll('.nav-arrow').forEach(a => a.classList.remove('visible')), 2000);
+        const cfg = {'v-up': [-1, 0], 'v-down': [1, 0], 'h-left': [0, -1], 'h-right': [0, 1]};
+        
+        for (let id in cfg) { 
+            const btn = document.getElementById(id);
+            const exists = has(r + cfg[id][0], c + cfg[id][1]);
+            btn.dataset.exists = !!exists;
+            
+            if (isEditMode) {
+                btn.style.display = 'flex';
+                btn.classList.add('visible');
+                if (!exists) btn.classList.add('invalid-edit');
+                else btn.classList.remove('invalid-edit');
+            } else {
+                btn.classList.remove('invalid-edit');
+                btn.style.display = exists ? 'flex' : 'none';
+            }
+        }
     }
 
     window.jumpTo = function(r, c) {
@@ -100,12 +124,14 @@
         if (target) { 
             target.classList.add('active'); updateArrows(r, c);
             moveHistory.push({ t: Date.now(), pos: [r,c], txt: target.innerText.substring(0,20) });
-            document.querySelectorAll('.outline-item').forEach(el => el.classList.remove('active'));
-            const item = document.querySelector(`.outline-item[data-pos="${r}-${c}"]`);
-            if (item) { item.classList.add('active'); item.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-            document.querySelectorAll('.map-dot').forEach(dot => dot.classList.remove('current'));
-            document.querySelectorAll(`.map-dot[data-pos="${r}-${c}"]`).forEach(d => d.classList.add('current'));
+            highlightInOutline(r, c);
+            resetArrowTimer();
         }
+    };
+
+    window.loadStrate = async function(name, r, c) {
+        if (name === currentSheetName) window.jumpTo(parseInt(r), parseInt(c));
+        else { await load(name); setTimeout(() => window.jumpTo(parseInt(r), parseInt(c)), 400); }
     };
 
     function moveDir(r, c) {
@@ -173,6 +199,14 @@
         });
     }
 
+    function highlightInOutline(r, c) {
+        document.querySelectorAll('.outline-item').forEach(el => el.classList.remove('active'));
+        const target = document.querySelector(`.outline-item[data-pos="${r}-${c}"]`);
+        if (target) { target.classList.add('active'); target.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+        document.querySelectorAll('.map-dot').forEach(dot => dot.classList.remove('current'));
+        document.querySelectorAll(`.map-dot[data-pos="${r}-${c}"]`).forEach(d => d.classList.add('current'));
+    }
+
     async function load(name = "") {
         const loader = document.getElementById('loader');
         loader.style.display = 'flex'; loader.style.opacity = '1';
@@ -202,7 +236,12 @@
             }, 1000);
         });
         document.getElementById('close-sys').onclick = () => document.getElementById('system-panel').classList.remove('open');
-        document.getElementById('btn-edit').onclick = () => { isEditMode = !isEditMode; document.getElementById('btn-edit').classList.toggle('active', isEditMode); render(); };
+        document.getElementById('btn-edit').onclick = () => { 
+            isEditMode = !isEditMode; 
+            document.getElementById('btn-edit').classList.toggle('active', isEditMode);
+            document.getElementById('hud-minimap').classList.toggle('visible', isEditMode);
+            render(); 
+        };
         document.getElementById('btn-undo').onclick = () => { if(undoStack.length > 0) { globalMatrix = undoStack.pop(); render(); buildOutline(); } };
         document.getElementById('btn-exp-mat').onclick = () => {
             const dataStr = JSON.stringify({ sheetName: currentSheetName, matrix: globalMatrix, version: HTML_VERSION }, null, 2);
