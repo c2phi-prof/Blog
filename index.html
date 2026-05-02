@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LabyBlog v4.5.0 - Pure Markdown Engine</title>
+    <title>LabyBlog v4.5.2 - Robust Multivers Engine</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700&family=Inter:wght@300;400&display=swap" rel="stylesheet">
     <style>
@@ -26,8 +26,8 @@
         #hud-minimap.visible { opacity: 0.4; }
         .slide { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; box-sizing: border-box; padding: 40px; overflow-y: auto; }
         .slide.active { display: flex; justify-content: center; align-items: center; } 
-        .content { width: 100%; line-height: 1.6; font-size: 1.2rem; outline: none; text-align: center; font-family: 'Inconsolata', monospace; color: var(--text); }
-        .content.editing { background-color: rgba(255,255,255,0.8); padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .content { width: 100%; line-height: 1.6; font-size: 1.2rem; outline: none; text-align: center; font-family: 'Inconsolata', monospace; color: var(--text); user-select: none; -webkit-user-select: none; }
+        .content.editing { background-color: rgba(255,255,255,0.8); padding: 20px; border-radius: 8px; user-select: text; -webkit-user-select: text; caret-color: var(--text); }
         .nav-arrow { position: fixed; background: rgba(255, 255, 255, 0.3); border: none; font-size: 40px; color: #000; z-index: 100; display: none; align-items: center; justify-content: center; width: 60px; height: 60px; border-radius: 50%; opacity: 0; transition: opacity 0.8s ease; }
         .nav-arrow.visible { display: flex; opacity: 0.15; } 
         .arrow-up { top: 10px; left: 50%; transform: translateX(-50%); }
@@ -66,12 +66,23 @@
 <div id="main-container"></div>
 
 <script>
-    const HTML_VERSION = "4.5.0";
+    const HTML_VERSION = "4.5.2";
     const PROXY_URL = "https://script.google.com/macros/s/AKfycbyh6DHFtArE5EhPoz3bC9nwp_Fbuv4q_AA-7ICpl8LUMnAJiUrWqc6B_BQDNrVYCtLskQ/exec";
     let globalMatrix = [], currentSheetName = "", currentR = 0, currentC = 0;
     let clickCount = 0, clickTimer = null, lastTapTime = 0, isEditMode = false, moveHistory = [], undoStack = [];
 
-    marked.setOptions({ gfm: true, breaks: true });
+    // --- ROBUST MARKED RENDERER ---
+    const renderer = new marked.Renderer();
+    renderer.link = (arg1, arg2, arg3) => {
+        let href = typeof arg1 === 'object' ? arg1.href : arg1;
+        let text = typeof arg1 === 'object' ? arg1.text : arg3;
+        if (href && typeof href === 'string' && href.startsWith('laby://')) {
+            const parts = href.replace('laby://', '').split('/');
+            return `<a href="#" onclick="window.loadStrate('${decodeURIComponent(parts[0])}',${parts[1]},${parts[2]});return false;">${text}</a>`;
+        }
+        return `<a href="${href}" target="_blank">${text}</a>`;
+    };
+    marked.setOptions({ renderer: renderer, gfm: true, breaks: true });
 
     function updateArrows(r, c) {
         const has = (row, col) => globalMatrix[row] && globalMatrix[row][col];
@@ -91,9 +102,8 @@
         currentR = r; currentC = c;
         const target = document.getElementById(`s-${r}-${c}`);
         if (target) { 
-            target.classList.add('active'); 
-            updateArrows(r, c);
-            moveHistory.push({ t: Date.now(), pos: [r,c], txt: target.innerText.substring(0,30) });
+            target.classList.add('active'); updateArrows(r, c);
+            moveHistory.push({ t: Date.now(), pos: [r,c], txt: target.innerText.substring(0,20) });
             document.querySelectorAll('.outline-item').forEach(el => el.classList.remove('active'));
             const item = document.querySelector(`.outline-item[data-pos="${r}-${c}"]`);
             if (item) { item.classList.add('active'); item.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
@@ -102,7 +112,7 @@
         }
     };
 
-    window.loadStrate = async function(name, r, c) { await load(name); setTimeout(() => window.jumpTo(r, c), 300); };
+    window.loadStrate = async function(name, r, c) { await load(name); setTimeout(() => window.jumpTo(r, c), 400); };
 
     function moveDir(r, c) {
         const nR = currentR + r, nC = currentC + c;
