@@ -3,68 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LabyBlog v4.3.8 - Classic Caret & Background Cheatcode</title>
+    <title>LabyBlog v4.4.0 - Multivers Strate Engine</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700&family=Inter:wght@300;400&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #eeeeee; --text: #333; --accent: #FFD700; --ui-idle: #777; }
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background-color: #ffffff; font-family: 'Inter', sans-serif; touch-action: none; }
         #main-container { width: 100vw; height: 100vh; position: relative; z-index: 1; }
-        
-        /* --- SYSTEM PANEL --- */
-        #system-panel { 
-            position: fixed; top: 0; left: -100vw; width: 100vw; height: 100vh; 
-            background: #fcfcfc; z-index: 1000; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-            display: flex; flex-direction: column; padding: 20px; box-sizing: border-box;
-        }
+        #system-panel { position: fixed; top: 0; left: -100vw; width: 100vw; height: 100vh; background: #fcfcfc; z-index: 1000; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; }
         #system-panel.open { left: 0; }
         .system-header { display: flex; flex-direction: column; gap: 20px; margin-bottom: 30px; }
         .system-tools { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
-        
         #matrix-minimap { display: grid; gap: 2px; background: #eee; border: 1px solid #ddd; padding: 4px; width: fit-content; }
         .map-dot { width: 14px; height: 14px; background-color: #fff; border-radius: 1px; }
         .map-dot.occupied { background-color: #bbb; cursor: pointer; }
         .map-dot.current { background-color: var(--text); }
-
-        .tool-btn { 
-            width: 45px; height: 45px; background: #fff; border: 1px solid #ddd; cursor: pointer; 
-            display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: var(--ui-idle); transition: all 0.2s;
-        }
+        .tool-btn { width: 45px; height: 45px; background: #fff; border: 1px solid #ddd; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: var(--ui-idle); transition: all 0.2s; }
         .tool-btn.active { color: #000; border-color: #000; background: #f0f0f0; }
-
         #outline-content { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; border-top: 1px solid #eee; padding-top: 10px; }
         .outline-item { cursor: pointer; padding: 12px; border-left: 2px solid #eee; background: #f9f9f9; font-size: 0.8rem; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .outline-item.active { border-left-color: #000; background: #fff; color: #000; font-weight: bold; }
-
-        /* --- HUD & CONTENT --- */
         #hud-minimap { position: fixed; bottom: 20px; right: 20px; z-index: 500; pointer-events: none; opacity: 0; transition: opacity 0.3s; background: rgba(255,255,255,0.6); padding: 4px; border: 1px solid #ddd; }
         #hud-minimap.visible { opacity: 0.4; }
-        
         .slide { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; box-sizing: border-box; padding: 40px; overflow-y: auto; }
         .slide.active { display: flex; } 
-        
-        .content { 
-            width: 100%; line-height: 1.4; font-size: 1.2rem; outline: none; position: relative; 
-            user-select: none; -webkit-user-select: none;
-            transition: background-color 0.3s;
-        }
-        
-        /* Mode Édition : Curseur Classique & Signal Visuel */
-        .content.editing { 
-            user-select: text; -webkit-user-select: text; 
-            caret-color: var(--text);
-            background-color: rgba(255,255,255,0.5);
-            border-radius: 5px;
-            padding: 10px;
-        }
-
+        .content { width: 100%; line-height: 1.4; font-size: 1.2rem; outline: none; position: relative; user-select: none; -webkit-user-select: none; }
+        .content.editing { user-select: text; -webkit-user-select: text; caret-color: var(--text); background-color: rgba(255,255,255,0.5); border-radius: 5px; padding: 10px; }
         .nav-arrow { position: fixed; background: rgba(255, 255, 255, 0.3); border: none; font-size: 40px; color: #000; z-index: 100; display: none; align-items: center; justify-content: center; width: 60px; height: 60px; border-radius: 50%; opacity: 0; transition: opacity 0.8s ease; }
         .nav-arrow.visible { display: flex; opacity: 0.15; } 
         .arrow-up { top: 10px; left: 50%; transform: translateX(-50%); }
         .arrow-down { bottom: 10px; left: 50%; transform: translateX(-50%); }
         .arrow-left { left: 10px; top: 50%; transform: translateY(-50%); }
         .arrow-right { right: 10px; top: 50%; transform: translateY(-50%); }
-
         #loader { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #fff; display: flex; align-items: center; justify-content: center; z-index: 2000; transition: opacity 0.2s ease; }
         .data-engine { display: flex; align-items: center; width: 400px; font-family: 'Inconsolata', monospace; font-size: 12px; }
         #progress-line { height: 1px; background: #000; width: 0%; transition: width 0.1s linear; }
@@ -109,12 +79,13 @@
 <div id="main-container"></div>
 
 <script>
-    const HTML_VERSION = "4.3.8";
+    const HTML_VERSION = "4.4.0";
     const PROXY_URL = "https://script.google.com/macros/s/AKfycbyh6DHFtArE5EhPoz3bC9nwp_Fbuv4q_AA-7ICpl8LUMnAJiUrWqc6B_BQDNrVYCtLskQ/exec";
     let globalMatrix = [], currentSheetName = "", currentR = 0, currentC = 0;
     let clickCount = 0, clickTimer = null, lastTapTime = 0;
     let isEditMode = false, moveHistory = [], undoStack = [];
 
+    // --- CORE FUNCTIONS ---
     function showArrows() {
         const arrows = document.querySelectorAll('.nav-arrow');
         arrows.forEach(a => a.classList.add('visible'));
@@ -152,6 +123,13 @@
         }
     };
 
+    window.loadStrate = async function(name, r, c) {
+        if (name !== currentSheetName) {
+            await load(name);
+        }
+        setTimeout(() => window.jumpTo(r, c), 300);
+    };
+
     function moveDir(r, c) {
         const nR = currentR + r, nC = currentC + c;
         if (nR >= 0 && nC >= 0) {
@@ -176,7 +154,7 @@
                     slide.id = `s-${rIdx}-${cIdx}`;
                     const contentDiv = document.createElement('div');
                     contentDiv.className = 'content' + (isEditMode ? ' editing' : '');
-                    contentDiv.contentEditable = isEditMode ? "true" : "false";
+                    contentDiv.contentEditable = isEditMode;
                     contentDiv.innerHTML = marked.parse(cell.htmlContent);
                     contentDiv.onfocus = () => { if(isEditMode) saveState(); };
                     contentDiv.oninput = (e) => { if(isEditMode) globalMatrix[rIdx][cIdx].htmlContent = e.target.innerHTML; };
@@ -227,28 +205,24 @@
     function toggleHUD() { document.getElementById('hud-minimap').classList.toggle('visible'); }
 
     function handleGlobalClick(e) {
-        // Cheatcode logic: only count clicks on the background (slide or container)
-        // This prevents text editing from triggering the system panel
         if (e.target.closest('.content') && isEditMode) return;
         if (e.target.closest('#system-panel') || e.target.classList.contains('nav-arrow')) return;
-        
         const now = Date.now();
         if (now - lastTapTime > 400) clickCount = 1; else clickCount++;
         lastTapTime = now;
-        
         clearTimeout(clickTimer);
         clickTimer = setTimeout(() => {
             if (clickCount >= 5) toggleSystem();
             else if (clickCount === 3) toggleHUD();
             clickCount = 0;
         }, 1000);
-        
         showArrows();
     }
 
     async function load(name = "") {
         const loader = document.getElementById('loader');
         const bar = document.getElementById('progress-line');
+        loader.style.display = 'flex'; loader.style.opacity = '1';
         try {
             const url = name ? `${PROXY_URL}?sheet=${encodeURIComponent(name)}` : PROXY_URL;
             const res = await fetch(url);
@@ -272,7 +246,10 @@
             link.download = `Matrice_${currentSheetName}.json`; link.click();
         };
         document.getElementById('btn-exp-log').onclick = () => {
-            const logData = { meta: { role: "Machine Virtuelle Textuelle", version: HTML_VERSION, description: "Navigation linéaire et non-linéaire dans des matrices de textes multi-strates." }, matrix: globalMatrix, history: moveHistory };
+            const logData = { 
+                meta: { role: "Machine Virtuelle Textuelle", version: HTML_VERSION, description: "Navigation linéaire et non-linéaire dans des matrices de textes multi-strates." }, 
+                matrix: globalMatrix, history: moveHistory 
+            };
             const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([JSON.stringify(logData, null, 2)], { type: "application/json" }));
             link.download = `AI_LOG_${currentSheetName}.json`; link.click();
         };
