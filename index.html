@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blog C2PHI</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">    
-    <style>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">    <style>
         :root { --bg-color: #fdfaf3; --text-color: #3b438c; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -18,31 +17,31 @@
         .container { max-width: 1100px; margin: 0 auto; padding: 0 40px; }
 
         header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 120px; }
-.logo {
-    font-family: 'Playfair Display', serif;
-    font-size: 32px;
-    font-weight: 400;
-    letter-spacing: -1.5px; /* Logo plus compact */
-    cursor: default;
-    user-select: none;
-}
 
         /* H1 AJUSTÉ : Plus compact pour éviter le débordement */
 
-        h1 {
-    font-family: 'Playfair Display', serif;
-    /* Un peu plus petit que Lora en valeur max car elle monte plus haut visuellement */
-    font-size: clamp(30px, 5.2vw, 76px); 
+h1 {
+    font-family: 'Cormorant Garamond', serif;
+    /* On augmente légèrement la taille car elle est plus fine visuellement */
+    font-size: clamp(32px, 5.8vw, 82px); 
     font-weight: 600;
-    /* Resserre naturellement les lettres pour l'aspect compact */
-    letter-spacing: -0.05em; 
-    /* Réduction de l'interligne car la police est plus haute */
-    line-height: 1.05;
+    /* On resserre pour garder l'aspect "haute et serrée" malgré les rondeurs */
+    letter-spacing: -0.02em; 
+    line-height: 1;
     margin-bottom: 100px;
     white-space: nowrap; 
     outline: none;
 }
 
+.logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px; /* Légèrement plus grand pour compenser la finesse */
+    font-weight: 600;
+    letter-spacing: -1px;
+    cursor: default;
+    user-select: none;
+    text-transform: lowercase; /* Rendu très esthétique avec cette police */
+}
         .section-row {
             display: grid;
             grid-template-columns: 1fr 500px; 
