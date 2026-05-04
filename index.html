@@ -69,16 +69,18 @@
         }
 
         h1 {
-            font-family: 'Lora', serif;
-            font-size: clamp(30px, 5.5vw, 80px); 
-            font-weight: 600;
-            letter-spacing: -0.04em;
-            margin-bottom: 100px;
-            white-space: nowrap; 
-            line-height: 1.1;
-            outline: none;
-        }
-
+    font-family: 'Lora', serif;
+    font-size: clamp(30px, 5.5vw, 80px); 
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    margin-bottom: 100px;
+    
+    /* MODIFICATIONS ICI */
+    white-space: normal;      /* On autorise le retour à la ligne */
+    line-height: 1.05;        /* Interligne très serré pour garder l'aspect "bloc" */
+    max-width: 1000px;        /* On limite un peu pour éviter que le titre soit trop large */
+    overflow-wrap: break-word; /* Sécurité pour les mots très longs */
+}
         /* LA CORRECTION EST ICI : 
            On force la deuxième colonne à faire exactement 500px 
            pour retrouver le style étroit du modèle original. */
