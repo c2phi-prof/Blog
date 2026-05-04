@@ -5,111 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>oak - Blog Philo</title>
     <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,600;1,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-    
     <style>
         :root { --bg-color: #fdfaf3; --text-color: #3b438c; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
-            background-color: var(--bg-color); 
-            color: var(--text-color);
-            font-family: 'Space Mono', monospace; 
-            line-height: 1.6;
-            padding: 60px 0; 
-            -webkit-font-smoothing: antialiased;
+            background-color: var(--bg-color); color: var(--text-color);
+            font-family: 'Space Mono', monospace; line-height: 1.6;
+            padding: 60px 0; -webkit-font-smoothing: antialiased;
         }
-
-        /* CONTENEUR UNIQUE (Garantit l'alignement vertical gauche/droite) */
-        .container { 
-            max-width: 1100px; 
-            margin: 0 auto; 
-            padding: 0 40px; 
-        }
-
-        header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: baseline; 
-            margin-bottom: 120px; 
-        }
-
-        .logo { 
-            font-family: 'Lora', serif; 
-            font-size: 32px; 
-            font-weight: 400; 
-            letter-spacing: -1px; 
-            cursor: default; 
-            user-select: none; 
-        }
-
-        /* NAVIGATION : s'étend de droite à gauche */
-        nav { 
-            display: flex; 
-            gap: 40px; /* Espace entre les liens */
-            justify-content: flex-end; 
-            flex-grow: 1;
-        }
-
-        nav a { 
-            text-decoration: none; 
-            color: var(--text-color); 
-            font-size: 14px; 
-            border-bottom: 1px solid transparent; 
-            padding-bottom: 4px; 
-            opacity: 0.5; 
-            cursor: pointer; 
-            white-space: nowrap;
-        }
-
-        nav a.active { 
-            opacity: 1; 
-            border-bottom: 1px solid var(--text-color); 
-        }
-
-        h1 { 
-            font-family: 'Lora', serif; 
-            font-size: clamp(30px, 5.5vw, 80px); 
-            font-weight: 600; 
-            letter-spacing: -0.04em; 
-            margin-bottom: 100px; 
-            white-space: nowrap; 
-            line-height: 1.1; 
-            outline: none; 
-        }
-
-        .section-row { 
-            display: grid; 
-            grid-template-columns: 1fr 1.6fr; /* Ratio Oak pour l'équilibre visuel */
-            gap: 40px; 
-            margin-bottom: 80px; 
-        }
-
-        .label { 
-            font-size: 13px; 
-            font-weight: 700; 
-            outline: none; 
-        }
-
-        /* TEXTE : On enlève le max-width pour que le texte soit flush à droite */
-        .description p { 
-            font-size: 15px; 
-            margin-bottom: 25px; 
-            text-align: justify; 
-            outline: none; 
-        }
-
-        .description a { 
-            color: var(--text-color); 
-            text-decoration: none; 
-            border-bottom: 1px solid var(--text-color); 
-            padding-bottom: 1px; 
-        }
-
-        .edit-mode-on [contenteditable="true"]:focus { 
-            background: rgba(59, 67, 140, 0.05); 
-            border-radius: 2px; 
-        }
-
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 40px; }
+        header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 120px; }
+        .logo { font-family: 'Lora', serif; font-size: 32px; font-weight: 400; letter-spacing: -1px; cursor: default; user-select: none; }
+        
+        /* Alignement du menu à droite, extension vers la gauche */
+        nav { display: flex; justify-content: flex-end; gap: 40px; flex-grow: 1; }
+        nav a { text-decoration: none; color: var(--text-color); font-size: 14px; border-bottom: 1px solid transparent; padding-bottom: 4px; opacity: 0.5; cursor: pointer; white-space: nowrap; }
+        nav a.active { opacity: 1; border-bottom: 1px solid var(--text-color); }
+        
+        h1 { font-family: 'Lora', serif; font-size: clamp(30px, 5.5vw, 80px); font-weight: 600; letter-spacing: -0.04em; margin-bottom: 100px; white-space: nowrap; line-height: 1.1; outline: none; }
+        .section-row { display: grid; grid-template-columns: 1fr 1.6fr; gap: 40px; margin-bottom: 80px; }
+        .label { font-size: 13px; font-weight: 700; outline: none; }
+        .description p { font-size: 15px; margin-bottom: 25px; text-align: justify; outline: none; }
+        .description a { color: var(--text-color); text-decoration: none; border-bottom: 1px solid var(--text-color); padding-bottom: 1px; }
+        .edit-mode-on [contenteditable="true"]:focus { background: rgba(59, 67, 140, 0.05); border-radius: 2px; }
+        
         @media (max-width: 900px) {
             h1 { white-space: normal; font-size: 40px; }
             .section-row { grid-template-columns: 1fr; gap: 10px; }
@@ -131,12 +50,10 @@
         </main>
     </div>
 
-    <!-- Chargement des données externes -->
     <script src="content.js"></script>
 
     <script>
         let isEditMode = false;
-        // On récupère l'ID de la page dans l'URL (ex: ?p=page2) ou on prend la première
         const urlParams = new URLSearchParams(window.location.search);
         let currentPageId = urlParams.get('p') || Object.keys(blogData)[0];
 
@@ -145,14 +62,13 @@
         }
 
         function renderSite() {
-            // 1. Menu de navigation (Aligné à droite)
+            // 1. Navigation
             const nav = document.getElementById('main-nav');
             nav.innerHTML = '';
             Object.keys(blogData).forEach(id => {
                 const link = document.createElement('a');
                 link.innerText = blogData[id].menuTitle;
                 if(id === currentPageId) link.classList.add('active');
-                // On change l'URL sans recharger pour la navigation fluide
                 link.onclick = () => { 
                     currentPageId = id; 
                     window.history.pushState({}, '', '?p='+id);
@@ -161,35 +77,36 @@
                 nav.appendChild(link);
             });
 
-            // 2. Headline
+            // 2. Titre
             const titleEl = document.getElementById('page-title');
             const savedTitle = localStorage.getItem(`title-${currentPageId}`);
             titleEl.innerText = savedTitle || blogData[currentPageId].pageHeadline;
 
-            // 3. Sections
+            // 3. Sections (Simplifiées)
             const container = document.getElementById('sections-container');
             container.innerHTML = '';
-            // Mélange aléatoire
             const shuffled = [...blogData[currentPageId].sections].sort(() => 0.5 - Math.random());
             
             shuffled.forEach(item => {
                 const section = document.createElement('div');
                 section.className = 'section-row';
                 
-                const savedLabel = localStorage.getItem(`label-${currentPageId}-${item.id}`);
-                const savedText = localStorage.getItem(`text-${currentPageId}-${item.id}`);
+                // On utilise le nom de la section comme ID de sauvegarde
+                const storageKey = item.section.replace(/\s+/g, '-').toLowerCase();
+                const savedLabel = localStorage.getItem(`label-${currentPageId}-${storageKey}`);
+                const savedText = localStorage.getItem(`text-${currentPageId}-${storageKey}`);
 
                 section.innerHTML = `
-                    <div class="label" data-id="${item.id}" data-type="label" contenteditable="${isEditMode}">${savedLabel || item.label}</div>
+                    <div class="label" data-saveid="${storageKey}" data-type="label" contenteditable="${isEditMode}">${savedLabel || item.section}</div>
                     <div class="description">
-                        <p data-id="${item.id}" data-type="text" contenteditable="${isEditMode}">${parseLinks(savedText || item.text)}</p>
+                        <p data-saveid="${storageKey}" data-type="text" contenteditable="${isEditMode}">${parseLinks(savedText || item.text)}</p>
                     </div>
                 `;
                 container.appendChild(section);
             });
         }
 
-        // CHEAT CODE : 5 clics sur logo
+        // CHEAT CODE (5 clics sur logo)
         let count = 0, timer;
         document.getElementById('logo-trigger').addEventListener('click', () => {
             count++; clearTimeout(timer);
@@ -207,8 +124,8 @@
             const el = e.target;
             if (el.id === 'page-title') {
                 localStorage.setItem(`title-${currentPageId}`, el.innerText);
-            } else if (el.hasAttribute('data-id')) {
-                localStorage.setItem(`${el.dataset.type}-${currentPageId}-${el.dataset.id}`, el.innerText);
+            } else if (el.hasAttribute('data-saveid')) {
+                localStorage.setItem(`${el.dataset.type}-${currentPageId}-${el.dataset.saveid}`, el.innerText);
             }
         });
 
