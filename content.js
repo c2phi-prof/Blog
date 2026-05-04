@@ -27,7 +27,7 @@ const blogData = {
                 text: "Il ne faut jamais rendre l'injustice par l'injustice. Voir le [Criton|https://fr.wikisource.org/wiki/Criton]." 
             }
         ]
-    }
+    },
  "page3": {
         menuTitle: "Noueau",
         pageHeadline: "Nouveau Titre",
