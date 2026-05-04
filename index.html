@@ -17,7 +17,7 @@
         header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 120px; }
         .logo { font-family: 'Lora', serif; font-size: 32px; font-weight: 400; letter-spacing: -1px; cursor: default; user-select: none; }
         
-        /* Alignement du menu à droite, extension vers la gauche */
+        /* Navigation alignée à droite */
         nav { display: flex; justify-content: flex-end; gap: 40px; flex-grow: 1; }
         nav a { text-decoration: none; color: var(--text-color); font-size: 14px; border-bottom: 1px solid transparent; padding-bottom: 4px; opacity: 0.5; cursor: pointer; white-space: nowrap; }
         nav a.active { opacity: 1; border-bottom: 1px solid var(--text-color); }
@@ -27,6 +27,7 @@
         .label { font-size: 13px; font-weight: 700; outline: none; }
         .description p { font-size: 15px; margin-bottom: 25px; text-align: justify; outline: none; }
         .description a { color: var(--text-color); text-decoration: none; border-bottom: 1px solid var(--text-color); padding-bottom: 1px; }
+        
         .edit-mode-on [contenteditable="true"]:focus { background: rgba(59, 67, 140, 0.05); border-radius: 2px; }
         
         @media (max-width: 900px) {
@@ -54,52 +55,50 @@
 
     <script>
         let isEditMode = false;
-        const urlParams = new URLSearchParams(window.location.search);
-        let currentPageId = urlParams.get('p') || Object.keys(blogData)[0];
+        // Navigation basée sur l'index du tableau blogData
+        let currentIndex = 0;
 
         function parseLinks(text) {
             return text.replace(/\[([^|]+)\|([^\]]+)\]/g, '<a href="$2" target="_blank">$1</a>');
         }
 
         function renderSite() {
+            const data = blogData[currentIndex];
+            const pageKey = data.menuTitle.replace(/\s+/g, '-').toLowerCase();
+
             // 1. Navigation
             const nav = document.getElementById('main-nav');
             nav.innerHTML = '';
-            Object.keys(blogData).forEach(id => {
+            blogData.forEach((page, index) => {
                 const link = document.createElement('a');
-                link.innerText = blogData[id].menuTitle;
-                if(id === currentPageId) link.classList.add('active');
-                link.onclick = () => { 
-                    currentPageId = id; 
-                    window.history.pushState({}, '', '?p='+id);
-                    renderSite(); 
-                };
+                link.innerText = page.menuTitle;
+                if(index === currentIndex) link.classList.add('active');
+                link.onclick = () => { currentIndex = index; renderSite(); };
                 nav.appendChild(link);
             });
 
-            // 2. Titre
+            // 2. Titre de la page
             const titleEl = document.getElementById('page-title');
-            const savedTitle = localStorage.getItem(`title-${currentPageId}`);
-            titleEl.innerText = savedTitle || blogData[currentPageId].pageHeadline;
+            const savedTitle = localStorage.getItem(`title-${pageKey}`);
+            titleEl.innerText = savedTitle || data.pageHeadline;
 
-            // 3. Sections (Simplifiées)
+            // 3. Sections (Mélangées)
             const container = document.getElementById('sections-container');
             container.innerHTML = '';
-            const shuffled = [...blogData[currentPageId].sections].sort(() => 0.5 - Math.random());
+            const shuffled = [...data.sections].sort(() => 0.5 - Math.random());
             
             shuffled.forEach(item => {
                 const section = document.createElement('div');
                 section.className = 'section-row';
-                
-                // On utilise le nom de la section comme ID de sauvegarde
-                const storageKey = item.section.replace(/\s+/g, '-').toLowerCase();
-                const savedLabel = localStorage.getItem(`label-${currentPageId}-${storageKey}`);
-                const savedText = localStorage.getItem(`text-${currentPageId}-${storageKey}`);
+                const sectionKey = item.section.replace(/\s+/g, '-').toLowerCase();
+
+                const savedLabel = localStorage.getItem(`label-${pageKey}-${sectionKey}`);
+                const savedText = localStorage.getItem(`text-${pageKey}-${sectionKey}`);
 
                 section.innerHTML = `
-                    <div class="label" data-saveid="${storageKey}" data-type="label" contenteditable="${isEditMode}">${savedLabel || item.section}</div>
+                    <div class="label" data-page="${pageKey}" data-sec="${sectionKey}" data-type="label" contenteditable="${isEditMode}">${savedLabel || item.section}</div>
                     <div class="description">
-                        <p data-saveid="${storageKey}" data-type="text" contenteditable="${isEditMode}">${parseLinks(savedText || item.text)}</p>
+                        <p data-page="${pageKey}" data-sec="${sectionKey}" data-type="text" contenteditable="${isEditMode}">${parseLinks(savedText || item.text)}</p>
                     </div>
                 `;
                 container.appendChild(section);
@@ -119,13 +118,17 @@
             }
         });
 
-        // SAUVEGARDE LOCALE
+        // SAUVEGARDE LOCALE AUTOMATIQUE
         document.addEventListener('input', (e) => {
             const el = e.target;
+            const pageKey = blogData[currentIndex].menuTitle.replace(/\s+/g, '-').toLowerCase();
+            
             if (el.id === 'page-title') {
-                localStorage.setItem(`title-${currentPageId}`, el.innerText);
-            } else if (el.hasAttribute('data-saveid')) {
-                localStorage.setItem(`${el.dataset.type}-${currentPageId}-${el.dataset.saveid}`, el.innerText);
+                localStorage.setItem(`title-${pageKey}`, el.innerText);
+            } else if (el.hasAttribute('data-sec')) {
+                const secKey = el.dataset.sec;
+                const type = el.dataset.type;
+                localStorage.setItem(`${type}-${pageKey}-${secKey}`, el.innerText);
             }
         });
 
