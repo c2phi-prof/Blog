@@ -17,7 +17,7 @@
         header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 120px; }
         .logo { font-family: 'Lora', serif; font-size: 32px; font-weight: 400; letter-spacing: -1px; cursor: default; user-select: none; }
         
-        /* Navigation alignée à droite */
+        /* Navigation alignée à droite, extension vers la gauche */
         nav { display: flex; justify-content: flex-end; gap: 40px; flex-grow: 1; }
         nav a { text-decoration: none; color: var(--text-color); font-size: 14px; border-bottom: 1px solid transparent; padding-bottom: 4px; opacity: 0.5; cursor: pointer; white-space: nowrap; }
         nav a.active { opacity: 1; border-bottom: 1px solid var(--text-color); }
@@ -34,7 +34,7 @@
             h1 { white-space: normal; font-size: 40px; }
             .section-row { grid-template-columns: 1fr; gap: 10px; }
             header { flex-direction: column; align-items: flex-start; gap: 20px; }
-            nav { justify-content: flex-start; width: 100%; gap: 20px; }
+            nav { justify-content: flex-start; width: 100%; gap: 20px; flex-wrap: wrap; }
         }
     </style>
 </head>
@@ -55,7 +55,6 @@
 
     <script>
         let isEditMode = false;
-        // Navigation basée sur l'index du tableau blogData
         let currentIndex = 0;
 
         function parseLinks(text) {
@@ -66,7 +65,7 @@
             const data = blogData[currentIndex];
             const pageKey = data.menuTitle.replace(/\s+/g, '-').toLowerCase();
 
-            // 1. Navigation
+            // 1. Navigation : On inverse l'ordre d'affichage
             const nav = document.getElementById('main-nav');
             nav.innerHTML = '';
             blogData.forEach((page, index) => {
@@ -74,15 +73,16 @@
                 link.innerText = page.menuTitle;
                 if(index === currentIndex) link.classList.add('active');
                 link.onclick = () => { currentIndex = index; renderSite(); };
-                nav.appendChild(link);
+                // .prepend insère au début, donc le premier du JS finit à la fin (à droite)
+                nav.prepend(link); 
             });
 
-            // 2. Titre de la page
+            // 2. Titre
             const titleEl = document.getElementById('page-title');
             const savedTitle = localStorage.getItem(`title-${pageKey}`);
             titleEl.innerText = savedTitle || data.pageHeadline;
 
-            // 3. Sections (Mélangées)
+            // 3. Sections
             const container = document.getElementById('sections-container');
             container.innerHTML = '';
             const shuffled = [...data.sections].sort(() => 0.5 - Math.random());
@@ -91,7 +91,6 @@
                 const section = document.createElement('div');
                 section.className = 'section-row';
                 const sectionKey = item.section.replace(/\s+/g, '-').toLowerCase();
-
                 const savedLabel = localStorage.getItem(`label-${pageKey}-${sectionKey}`);
                 const savedText = localStorage.getItem(`text-${pageKey}-${sectionKey}`);
 
@@ -105,7 +104,7 @@
             });
         }
 
-        // CHEAT CODE (5 clics sur logo)
+        // CHEAT CODE
         let count = 0, timer;
         document.getElementById('logo-trigger').addEventListener('click', () => {
             count++; clearTimeout(timer);
@@ -118,17 +117,14 @@
             }
         });
 
-        // SAUVEGARDE LOCALE AUTOMATIQUE
+        // SAUVEGARDE LOCALE
         document.addEventListener('input', (e) => {
             const el = e.target;
             const pageKey = blogData[currentIndex].menuTitle.replace(/\s+/g, '-').toLowerCase();
-            
             if (el.id === 'page-title') {
                 localStorage.setItem(`title-${pageKey}`, el.innerText);
             } else if (el.hasAttribute('data-sec')) {
-                const secKey = el.dataset.sec;
-                const type = el.dataset.type;
-                localStorage.setItem(`${type}-${pageKey}-${secKey}`, el.innerText);
+                localStorage.setItem(`${el.dataset.type}-${pageKey}-${el.dataset.sec}`, el.innerText);
             }
         });
 
