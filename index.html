@@ -1,186 +1,183 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>oak - Que peut le droit contre la force ?</title>
-    <!-- Importation des polices : Lora (Titre & Logo) et Space Mono (Texte & Étiquettes) -->
-    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,600;1,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #fdfaf3;
             --text-color: #3b438c;
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
             font-family: 'Space Mono', monospace;
             line-height: 1.6;
-            padding: 60px 0;
+            padding: 40px 20px;
             -webkit-font-smoothing: antialiased;
         }
-
-        .page-wrapper {
+        .container {
             max-width: 1100px;
             margin: 0 auto;
-            padding: 0 40px;
         }
-
         header {
             display: flex;
             justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 100px;
+            align-items: center;
+            margin-bottom: 120px;
         }
-
         .logo {
-            font-family: 'Lora', serif;
-            font-size: 32px;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 36px;
+            font-weight: 600;
             letter-spacing: -1px;
-            font-weight: 400;
+            text-transform: lowercase;
+            cursor: pointer;
         }
-
+        nav {
+            display: flex;
+            justify-content: flex-end;
+            gap: 25px;
+        }
         nav a {
             text-decoration: none;
             color: var(--text-color);
             font-size: 14px;
             border-bottom: 1px solid var(--text-color);
             padding-bottom: 4px;
+            white-space: nowrap;
         }
-
-        /* TITRE : Retour à Lora avec taille diminuée */
         h1 {
-            font-family: 'Lora', serif;
-            font-size: clamp(30px, 4.5vw, 64px); 
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(30px, 5.5vw, 80px); 
             font-weight: 600;
-            letter-spacing: -0.03em;
-            margin-bottom: 80px;
+            letter-spacing: -0.04em;
+            margin-bottom: 100px;
             white-space: nowrap; 
             line-height: 1.1;
+            outline: none;
         }
-
-        #sections-container {
-            display: flex;
-            flex-direction: column;
-        }
-
         .section-row {
             display: grid;
-            grid-template-columns: 1fr 1.6fr;
+            grid-template-columns: 1fr 1fr;
             gap: 40px;
-            margin-bottom: 45px; /* Espace encore réduit entre les sections */
-            align-items: start;
+            margin-bottom: 100px;
         }
-
-        /* Étiquettes uniformisées (Space Mono 16px Bold) */
         .label {
-            font-family: 'Space Mono', monospace;
-            font-size: 16px; 
+            font-size: 13px;
             font-weight: 700;
             outline: none;
-            display: block; /* Garantit un comportement identique pour toutes */
         }
-
         .description p {
             font-size: 15px;
-            margin-bottom: 15px;
+            margin-bottom: 25px;
+            max-width: 500px; 
             text-align: justify;
             outline: none;
         }
-
         .description a {
             color: var(--text-color);
             text-decoration: none;
             border-bottom: 1px solid var(--text-color);
             padding-bottom: 1px;
         }
-
-        /* Style pour le cheat code (édition) */
-        [contenteditable="true"]:focus {
+        .edit-mode-on [contenteditable="true"]:focus {
             background: rgba(59, 67, 140, 0.05);
             border-radius: 2px;
         }
-
         @media (max-width: 900px) {
-            h1 { white-space: normal; font-size: 38px; }
-            .section-row { grid-template-columns: 1fr; gap: 8px; }
-            header { margin-bottom: 60px; }
+            h1 { white-space: normal; font-size: 40px; }
+            .section-row { grid-template-columns: 1fr; }
+            header { flex-direction: column; align-items: flex-start; gap: 20px; }
+            nav { justify-content: flex-start; width: 100%; }
         }
     </style>
 </head>
 <body>
 
-    <div class="page-wrapper">
+    <div class="container">
         <header>
-            <div class="logo">oak</div>
+            <div id="logo-trigger" class="logo">oak</div>
             <nav>
+                <a href="#">Justice</a>
                 <a href="#">May 4th</a>
             </nav>
         </header>
 
         <main>
-            <h1>Que peut le droit contre la force ?</h1>
-
+            <h1 id="page-title" contenteditable="false">Que peut le droit contre la force ?</h1>
             <div id="sections-container">
-                
-                <div class="section-row">
-                    <div class="label" contenteditable="true">Calliclès</div>
-                    <div class="description">
-                        <p contenteditable="true">Dans l'analyse callicléenne, le droit positif est une construction artificielle des faibles pour neutraliser les tempéraments supérieurs. En érigeant l'égalité en norme, la cité opère un renversement de l'ordre naturel où prévaut la domination du plus apte.</p>
-                        <p contenteditable="true">La justice conventionnelle n'est ici qu'un paravent destiné à masquer la peur des masses. La seule véritable loi est celle de la nature, qui exige que le plus fort l'emporte. <a href="https://fr.wikisource.org/wiki/Gorgias/Édition_Chambry" target="_blank">Source : Platon, Gorgias.</a></p>
-                    </div>
-                </div>
-
-                <div class="section-row">
-                    <div class="label" contenteditable="true">Rousseau</div>
-                    <div class="description">
-                        <p contenteditable="true">La force est une puissance physique dont aucun effet moral ne saurait résulter. Céder à la force est un acte de nécessité, non de volonté. Le droit ne naît qu'au moment où la force se transmue en autorité légitime par le pacte social.</p>
-                        <p contenteditable="true">Le droit peut tout contre la force parce qu'il change la nature de l'obéissance : le citoyen n'obéit plus à un homme, mais à la volonté générale. <a href="https://gallica.bnf.fr/ark:/12148/bpt6k118391t" target="_blank">Source : Du Contrat Social.</a></p>
-                    </div>
-                </div>
-
-                <div class="section-row">
-                    <div class="label" contenteditable="true">Max Weber</div>
-                    <div class="description">
-                        <p contenteditable="true">Le droit et la force se structurent mutuellement au sein de l'État moderne. Ce dernier se définit par la revendication du monopole de la violence physique légitime. Le droit devient la procédure de rationalisation de la force.</p>
-                        <p contenteditable="true">La force ne s'exerce plus de manière aléatoire, mais selon une domination légale-rationnelle. Le droit encadre la contrainte pour assurer la stabilité du corps social. <a href="https://classiques.uqac.ca/classiques/weber_max/le_savant_et_le_politique/le_savant_et_le_politique.html" target="_blank">Source : Le Savant et le Politique.</a></p>
-                    </div>
-                </div>
-
-                <div class="section-row">
-                    <div class="label" contenteditable="true">Bakounine</div>
-                    <div class="description">
-                        <p contenteditable="true">Tout État est une force organisée qui s'impose à l'individu. Le droit n'est que la consécration légale de cette violence institutionnalisée. Il n'y a pas de droit "juste" car la loi est, par essence, une limitation coercitive de la liberté.</p>
-                        <p contenteditable="true">La force du droit est celle d'une minorité privilégiée masquée derrière l'abstraction de la loi. Seule la révolution sociale peut abolir cette fiction juridique. <a href="https://fr.wikisource.org/wiki/Dieu_et_l’État" target="_blank">Source : Dieu et l'État.</a></p>
-                    </div>
-                </div>
-
-                <div class="section-row">
-                    <div class="label" contenteditable="true">Gandhi</div>
-                    <div class="description">
-                        <p contenteditable="true">Le droit puise sa force dans une exigence éthique supérieure : la vérité. Face à la force brute de l'oppresseur, le droit s'incarne dans la non-violence active, qui désarme l'adversaire en faisant appel à sa conscience morale.</p>
-                        <p contenteditable="true">Le droit l'emporte contre la force dès qu'il refuse de se placer sur le terrain de la violence physique pour affirmer une autorité spirituelle souveraine. <a href="https://www.philosophie-magazine.com/articles/gandhi-penseur-de-la-non-violence" target="_blank">Analyse : Philosophie Magazine.</a></p>
-                    </div>
-                </div>
-
+                <!-- Les sections sont injectées ici par le JS -->
             </div>
         </main>
     </div>
 
     <script>
-        // Mélange aléatoire au chargement
-        window.addEventListener('DOMContentLoaded', () => {
+        // Données sources intégrées
+        const contentData = [
+            { id: "callicles", label: "Calliclès", text: "La loi n'est qu'une convention arbitraire imposée par les faibles pour brider l'excellence des tempéraments supérieurs. Elle constitue un déni de l'ordre naturel. <a href='https://fr.wikisource.org/wiki/Gorgias/Édition_Chambry' target='_blank'>Texte source : Gorgias.</a>" },
+            { id: "rousseau", label: "Rousseau", text: "La force est une puissance physique dont aucun effet moral ne saurait résulter. Le droit naît de la transformation de la force en autorité légitime via le contrat social. <a href='https://gallica.bnf.fr/ark:/12148/bpt6k118391t' target='_blank'>Texte source : Contrat Social.</a>" },
+            { id: "weber", label: "Max Weber", text: "L'État moderne se caractérise par la revendication du monopole de la violence physique légitime. Le droit ne supprime pas la force mais la rationalise. <a href='https://classiques.uqac.ca/classiques/weber_max/le_savant_et_le_politique/le_savant_et_le_politique.html' target='_blank'>Texte source : Le Savant et le Politique.</a>" },
+            { id: "bakounine", label: "Bakounine", text: "Toute législation est une négation de la liberté humaine. Le droit n'est que la force de l'État masquée par l'abstraction juridique. <a href='https://fr.wikisource.org/wiki/Dieu_et_l’État' target='_blank'>Texte source : Dieu et l'État.</a>" },
+            { id: "gandhi", label: "Gandhi", text: "Le droit authentique tire sa force de la vérité (Satya). Face à l'oppression, le droit s'incarne dans la non-violence active, force spirituelle supérieure. <a href='https://www.philosophie-magazine.com/articles/gandhi-penseur-de-la-non-violence' target='_blank'>Analyse : Philosophie Magazine.</a>" }
+        ];
+
+        let isEditMode = false;
+
+        function init() {
             const container = document.getElementById('sections-container');
-            const sections = Array.from(container.getElementsByClassName('section-row'));
-            for (let i = sections.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                container.appendChild(sections[j]);
+            const titleEl = document.getElementById('page-title');
+            
+            // Chargement Titre
+            const savedTitle = localStorage.getItem('main-title');
+            if(savedTitle) titleEl.innerText = savedTitle;
+
+            // Mélange et rendu
+            const shuffled = contentData.sort(() => 0.5 - Math.random());
+            shuffled.forEach(item => {
+                const section = document.createElement('div');
+                section.className = 'section-row';
+                
+                const savedLabel = localStorage.getItem('label-' + item.id) || item.label;
+                const savedText = localStorage.getItem('text-' + item.id) || item.text;
+
+                section.innerHTML = `
+                    <div class="label" data-id="${item.id}" data-type="label" contenteditable="false">${savedLabel}</div>
+                    <div class="description">
+                        <p data-id="${item.id}" data-type="text" contenteditable="false">${savedText}</p>
+                    </div>
+                `;
+                container.appendChild(section);
+            });
+        }
+
+        // Mode Edition (5 clics sur logo)
+        let count = 0, timer;
+        document.getElementById('logo-trigger').addEventListener('click', () => {
+            count++; clearTimeout(timer);
+            timer = setTimeout(() => count = 0, 1000);
+            if (count === 5) {
+                isEditMode = !isEditMode;
+                document.body.classList.toggle('edit-mode-on', isEditMode);
+                document.querySelectorAll('[contenteditable]').forEach(el => el.contentEditable = isEditMode);
+                count = 0;
             }
         });
+
+        // Sauvegarde auto
+        document.addEventListener('input', (e) => {
+            const el = e.target;
+            if (el.id === 'page-title') {
+                localStorage.setItem('main-title', el.innerText);
+            } else if (el.hasAttribute('data-id')) {
+                localStorage.setItem(`${el.dataset.type}-${el.dataset.id}`, el.innerHTML);
+            }
+        });
+
+        init();
     </script>
 </body>
 </html>
