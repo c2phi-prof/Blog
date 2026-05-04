@@ -105,7 +105,7 @@
             shuffled.forEach(item => {
                 const section = document.createElement('div');
                 section.className = 'section-row';
-                const sectionKey = item.section.replace(/\s+/g, '-').toLowerCase();
+const sectionKey = item.section.replace(/\s+/g, '-').toLowerCase();
                 const savedLabel = localStorage.getItem(`label-${pageKey}-${sectionKey}`);
                 const savedText = localStorage.getItem(`text-${pageKey}-${sectionKey}`);
 
