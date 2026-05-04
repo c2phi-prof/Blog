@@ -4,44 +4,84 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blog C2PHI</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">    <style>
-        :root { --bg-color: #fdfaf3; --text-color: #3b438c; }
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --bg-color: #fdfaf3; 
+            --text-color: #3b438c; 
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            background-color: var(--bg-color); color: var(--text-color);
-            font-family: 'Space Mono', monospace; line-height: 1.6;
-            padding: 60px 0; -webkit-font-smoothing: antialiased;
+            background-color: var(--bg-color); 
+            color: var(--text-color);
+            font-family: 'Space Mono', monospace; 
+            line-height: 1.6;
+            padding: 60px 0; 
+            -webkit-font-smoothing: antialiased;
         }
 
-        .container { max-width: 1100px; margin: 0 auto; padding: 0 40px; }
+        .container { 
+            max-width: 1100px; 
+            margin: 0 auto; 
+            padding: 0 40px; 
+        }
 
-        header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 120px; }
+        header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: baseline; 
+            margin-bottom: 120px; 
+        }
 
-        /* H1 AJUSTÉ : Plus compact pour éviter le débordement */
+        nav {
+            display: flex;
+            justify-content: flex-end;
+            gap: 25px; /* Empêche le chevauchement des liens */
+            align-items: center;
+        }
 
-h1 {
-    font-family: 'Cormorant Garamond', serif;
-    /* On augmente légèrement la taille car elle est plus fine visuellement */
-    font-size: clamp(32px, 5.8vw, 82px); 
-    font-weight: 600;
-    /* On resserre pour garder l'aspect "haute et serrée" malgré les rondeurs */
-    letter-spacing: -0.02em; 
-    line-height: 1;
-    margin-bottom: 100px;
-    white-space: nowrap; 
-    outline: none;
-}
+        nav a {
+            text-decoration: none;
+            color: var(--text-color);
+            font-size: 14px;
+            border-bottom: 1px solid transparent;
+            padding-bottom: 4px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
 
-.logo {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 36px; /* Légèrement plus grand pour compenser la finesse */
-    font-weight: 600;
-    letter-spacing: -1px;
-    cursor: default;
-    user-select: none;
-    text-transform: lowercase; /* Rendu très esthétique avec cette police */
-}
+        nav a:hover, nav a.active {
+            border-bottom: 1px solid var(--text-color);
+        }
+
+        nav a.active {
+            font-weight: 700;
+        }
+
+        h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(32px, 5.8vw, 82px); 
+            font-weight: 600;
+            letter-spacing: -0.02em; 
+            line-height: 1;
+            margin-bottom: 100px;
+            white-space: nowrap; 
+            outline: none;
+        }
+
+        .logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 36px;
+            font-weight: 600;
+            letter-spacing: -1px;
+            cursor: default;
+            user-select: none;
+            text-transform: lowercase;
+        }
+
         .section-row {
             display: grid;
             grid-template-columns: 1fr 500px; 
@@ -50,10 +90,25 @@ h1 {
         }
 
         .label { font-size: 13px; font-weight: 700; outline: none; }
-        .description p { font-size: 15px; margin-bottom: 25px; text-align: justify; outline: none; }
-        .description a { color: var(--text-color); text-decoration: none; border-bottom: 1px solid var(--text-color); padding-bottom: 1px; }
+        
+        .description p { 
+            font-size: 15px; 
+            margin-bottom: 25px; 
+            text-align: justify; 
+            outline: none; 
+        }
+        
+        .description a { 
+            color: var(--text-color); 
+            text-decoration: none; 
+            border-bottom: 1px solid var(--text-color); 
+            padding-bottom: 1px; 
+        }
 
-        .edit-mode-on [contenteditable="true"]:focus { background: rgba(59, 67, 140, 0.05); border-radius: 2px; }
+        .edit-mode-on [contenteditable="true"]:focus { 
+            background: rgba(59, 67, 140, 0.05); 
+            border-radius: 2px; 
+        }
 
         @media (max-width: 900px) {
             h1 { white-space: normal; font-size: 38px; letter-spacing: -0.02em; }
@@ -76,6 +131,7 @@ h1 {
         </main>
     </div>
 
+    <!-- Le fichier content.js doit contenir votre variable blogData -->
     <script src="content.js"></script>
 
     <script>
@@ -90,28 +146,37 @@ h1 {
             const data = blogData[currentIndex];
             const pageKey = data.menuTitle.replace(/\s+/g, '-').toLowerCase();
 
+            // Rendu du Menu de Navigation
             const nav = document.getElementById('main-nav');
             nav.innerHTML = '';
             blogData.forEach((page, index) => {
                 const link = document.createElement('a');
                 link.innerText = page.menuTitle;
                 if(index === currentIndex) link.classList.add('active');
-                link.onclick = () => { currentIndex = index; renderSite(); };
-                nav.prepend(link); 
+                link.onclick = () => { 
+                    currentIndex = index; 
+                    renderSite(); 
+                };
+                nav.appendChild(link); // Ordre logique des pages
             });
 
+            // Rendu du Titre
             const titleEl = document.getElementById('page-title');
             const savedTitle = localStorage.getItem(`title-${pageKey}`);
             titleEl.innerText = savedTitle || data.pageHeadline;
 
+            // Rendu des Sections
             const container = document.getElementById('sections-container');
             container.innerHTML = '';
+            
+            // On clone pour ne pas modifier l'original lors du tri aléatoire
             const shuffled = [...data.sections].sort(() => 0.5 - Math.random());
             
             shuffled.forEach(item => {
                 const section = document.createElement('div');
                 section.className = 'section-row';
                 const sectionKey = item.section.replace(/\s+/g, '-').toLowerCase();
+                
                 const savedLabel = localStorage.getItem(`label-${pageKey}-${sectionKey}`);
                 const savedText = localStorage.getItem(`text-${pageKey}-${sectionKey}`);
 
@@ -125,6 +190,7 @@ h1 {
             });
         }
 
+        // Système de déverrouillage (5 clics sur le logo)
         let count = 0, timer;
         document.getElementById('logo-trigger').addEventListener('click', () => {
             count++; clearTimeout(timer);
@@ -137,6 +203,7 @@ h1 {
             }
         });
 
+        // Sauvegarde automatique
         document.addEventListener('input', (e) => {
             const el = e.target;
             const pageKey = blogData[currentIndex].menuTitle.replace(/\s+/g, '-').toLowerCase();
