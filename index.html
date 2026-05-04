@@ -3,96 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>oak - Que peut le droit contre la force ?</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <title>Blog C2PHI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,600;1,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
     <style>
-        :root {
-            --bg-color: #fdfaf3;
-            --text-color: #3b438c;
-        }
+        :root { --bg-color: #fdfaf3; --text-color: #3b438c; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'Space Mono', monospace;
-            line-height: 1.6;
-            padding: 40px 20px;
-            -webkit-font-smoothing: antialiased;
+            background-color: var(--bg-color); color: var(--text-color);
+            font-family: 'Space Mono', monospace; line-height: 1.6;
+            padding: 60px 0; -webkit-font-smoothing: antialiased;
         }
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-        }
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 120px;
-        }
-        .logo {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 36px;
-            font-weight: 600;
-            letter-spacing: -1px;
-            text-transform: lowercase;
-            cursor: pointer;
-        }
-        nav {
-            display: flex;
-            justify-content: flex-end;
-            gap: 25px;
-        }
-        nav a {
-            text-decoration: none;
-            color: var(--text-color);
-            font-size: 14px;
-            border-bottom: 1px solid var(--text-color);
-            padding-bottom: 4px;
-            white-space: nowrap;
-        }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 40px; }
+
+        header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 120px; }
+        .logo { font-family: 'Lora', serif; font-size: 32px; font-weight: 400; letter-spacing: -1px; cursor: default; user-select: none; }
+        
+        nav { display: flex; justify-content: flex-end; gap: 40px; flex-grow: 1; }
+        nav a { text-decoration: none; color: var(--text-color); font-size: 14px; border-bottom: 1px solid transparent; padding-bottom: 4px; opacity: 0.5; cursor: pointer; white-space: nowrap; }
+        nav a.active { opacity: 1; border-bottom: 1px solid var(--text-color); }
+
         h1 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: clamp(30px, 5.5vw, 80px); 
+            font-family: 'Lora', serif;
+            font-size: clamp(30px, 5.2vw, 76px); 
             font-weight: 600;
-            letter-spacing: -0.04em;
+            letter-spacing: -0.05em; 
             margin-bottom: 100px;
-            white-space: nowrap; 
-            line-height: 1.1;
+            white-space: normal;     
+            line-height: 1;        
             outline: none;
         }
+
         .section-row {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 500px; 
             gap: 40px;
-            margin-bottom: 100px;
+            margin-bottom: 80px;
         }
-        .label {
-            font-size: 13px;
-            font-weight: 700;
-            outline: none;
-        }
-        .description p {
-            font-size: 15px;
-            margin-bottom: 25px;
-            max-width: 500px; 
-            text-align: justify;
-            outline: none;
-        }
-        .description a {
-            color: var(--text-color);
-            text-decoration: none;
-            border-bottom: 1px solid var(--text-color);
-            padding-bottom: 1px;
-        }
-        .edit-mode-on [contenteditable="true"]:focus {
-            background: rgba(59, 67, 140, 0.05);
-            border-radius: 2px;
-        }
+
+        .label { font-size: 13px; font-weight: 700; outline: none; }
+        .description p { font-size: 15px; margin-bottom: 25px; text-align: justify; outline: none; }
+        .description a { color: var(--text-color); text-decoration: none; border-bottom: 1px solid var(--text-color); padding-bottom: 1px; }
+
+        .edit-mode-on [contenteditable="true"]:focus { background: rgba(59, 67, 140, 0.05); border-radius: 2px; }
+
         @media (max-width: 900px) {
-            h1 { white-space: normal; font-size: 40px; }
-            .section-row { grid-template-columns: 1fr; }
+            h1 { white-space: normal; font-size: 38px; letter-spacing: -0.02em; }
+            .section-row { grid-template-columns: 1fr; gap: 10px; }
             header { flex-direction: column; align-items: flex-start; gap: 20px; }
-            nav { justify-content: flex-start; width: 100%; }
+            nav { justify-content: flex-start; width: 100%; gap: 20px; flex-wrap: wrap; }
         }
     </style>
 </head>
@@ -101,60 +62,63 @@
     <div class="container">
         <header>
             <div id="logo-trigger" class="logo">oak</div>
-            <nav>
-                <a href="#">Justice</a>
-                <a href="#">May 4th</a>
-            </nav>
+            <nav id="main-nav"></nav>
         </header>
-
         <main>
-            <h1 id="page-title" contenteditable="false">Que peut le droit contre la force ?</h1>
-            <div id="sections-container">
-                <!-- Les sections sont injectées ici par le JS -->
-            </div>
+            <h1 id="page-title" contenteditable="false"></h1>
+            <div id="sections-container"></div>
         </main>
     </div>
 
+    <script src="content.js"></script>
+
     <script>
-        // Données sources intégrées
-        const contentData = [
-            { id: "callicles", label: "Calliclès", text: "La loi n'est qu'une convention arbitraire imposée par les faibles pour brider l'excellence des tempéraments supérieurs. Elle constitue un déni de l'ordre naturel. <a href='https://fr.wikisource.org/wiki/Gorgias/Édition_Chambry' target='_blank'>Texte source : Gorgias.</a>" },
-            { id: "rousseau", label: "Rousseau", text: "La force est une puissance physique dont aucun effet moral ne saurait résulter. Le droit naît de la transformation de la force en autorité légitime via le contrat social. <a href='https://gallica.bnf.fr/ark:/12148/bpt6k118391t' target='_blank'>Texte source : Contrat Social.</a>" },
-            { id: "weber", label: "Max Weber", text: "L'État moderne se caractérise par la revendication du monopole de la violence physique légitime. Le droit ne supprime pas la force mais la rationalise. <a href='https://classiques.uqac.ca/classiques/weber_max/le_savant_et_le_politique/le_savant_et_le_politique.html' target='_blank'>Texte source : Le Savant et le Politique.</a>" },
-            { id: "bakounine", label: "Bakounine", text: "Toute législation est une négation de la liberté humaine. Le droit n'est que la force de l'État masquée par l'abstraction juridique. <a href='https://fr.wikisource.org/wiki/Dieu_et_l’État' target='_blank'>Texte source : Dieu et l'État.</a>" },
-            { id: "gandhi", label: "Gandhi", text: "Le droit authentique tire sa force de la vérité (Satya). Face à l'oppression, le droit s'incarne dans la non-violence active, force spirituelle supérieure. <a href='https://www.philosophie-magazine.com/articles/gandhi-penseur-de-la-non-violence' target='_blank'>Analyse : Philosophie Magazine.</a>" }
-        ];
-
         let isEditMode = false;
+        let currentIndex = 0;
 
-        function init() {
-            const container = document.getElementById('sections-container');
+        function parseLinks(text) {
+            return text.replace(/\[([^|]+)\|([^\]]+)\]/g, '<a href="$2" target="_blank">$1</a>');
+        }
+
+        function renderSite() {
+            const data = blogData[currentIndex];
+            const pageKey = data.menuTitle.replace(/\s+/g, '-').toLowerCase();
+
+            const nav = document.getElementById('main-nav');
+            nav.innerHTML = '';
+            blogData.forEach((page, index) => {
+                const link = document.createElement('a');
+                link.innerText = page.menuTitle;
+                if(index === currentIndex) link.classList.add('active');
+                link.onclick = () => { currentIndex = index; renderSite(); };
+                nav.appendChild(link); // Correction : appendChild pour l'ordre alphabétique/logique
+            });
+
             const titleEl = document.getElementById('page-title');
-            
-            // Chargement Titre
-            const savedTitle = localStorage.getItem('main-title');
-            if(savedTitle) titleEl.innerText = savedTitle;
+            const savedTitle = localStorage.getItem(`title-${pageKey}`);
+            titleEl.innerText = savedTitle || data.pageHeadline;
 
-            // Mélange et rendu
-            const shuffled = contentData.sort(() => 0.5 - Math.random());
+            const container = document.getElementById('sections-container');
+            container.innerHTML = '';
+            const shuffled = [...data.sections].sort(() => 0.5 - Math.random());
+            
             shuffled.forEach(item => {
                 const section = document.createElement('div');
                 section.className = 'section-row';
-                
-                const savedLabel = localStorage.getItem('label-' + item.id) || item.label;
-                const savedText = localStorage.getItem('text-' + item.id) || item.text;
+                const sectionKey = item.section.replace(/\s+/g, '-').toLowerCase();
+                const savedLabel = localStorage.getItem(`label-${pageKey}-${sectionKey}`);
+                const savedText = localStorage.getItem(`text-${pageKey}-${sectionKey}`);
 
                 section.innerHTML = `
-                    <div class="label" data-id="${item.id}" data-type="label" contenteditable="false">${savedLabel}</div>
+                    <div class="label" data-sec="${sectionKey}" data-type="label" contenteditable="${isEditMode}">${savedLabel || item.section}</div>
                     <div class="description">
-                        <p data-id="${item.id}" data-type="text" contenteditable="false">${savedText}</p>
+                        <p data-sec="${sectionKey}" data-type="text" contenteditable="${isEditMode}">${parseLinks(savedText || item.text)}</p>
                     </div>
                 `;
                 container.appendChild(section);
             });
         }
 
-        // Mode Edition (5 clics sur logo)
         let count = 0, timer;
         document.getElementById('logo-trigger').addEventListener('click', () => {
             count++; clearTimeout(timer);
@@ -162,22 +126,22 @@
             if (count === 5) {
                 isEditMode = !isEditMode;
                 document.body.classList.toggle('edit-mode-on', isEditMode);
-                document.querySelectorAll('[contenteditable]').forEach(el => el.contentEditable = isEditMode);
+                renderSite();
                 count = 0;
             }
         });
 
-        // Sauvegarde auto
         document.addEventListener('input', (e) => {
             const el = e.target;
+            const pageKey = blogData[currentIndex].menuTitle.replace(/\s+/g, '-').toLowerCase();
             if (el.id === 'page-title') {
-                localStorage.setItem('main-title', el.innerText);
-            } else if (el.hasAttribute('data-id')) {
-                localStorage.setItem(`${el.dataset.type}-${el.dataset.id}`, el.innerHTML);
+                localStorage.setItem(`title-${pageKey}`, el.innerText);
+            } else if (el.hasAttribute('data-sec')) {
+                localStorage.setItem(`${el.dataset.type}-${pageKey}-${el.dataset.sec}`, el.innerText);
             }
         });
 
-        init();
+        renderSite();
     </script>
 </body>
 </html>
