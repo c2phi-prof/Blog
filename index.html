@@ -1,220 +1,186 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blog C2PHI</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <title>oak - Que peut le droit contre la force ?</title>
+    <!-- Importation des polices : Lora (Titre & Logo) et Space Mono (Texte & Étiquettes) -->
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,600;1,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --bg-color: #fdfaf3; 
-            --text-color: #3b438c; 
+        :root {
+            --bg-color: #fdfaf3;
+            --text-color: #3b438c;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            background-color: var(--bg-color); 
+            background-color: var(--bg-color);
             color: var(--text-color);
-            font-family: 'Space Mono', monospace; 
+            font-family: 'Space Mono', monospace;
             line-height: 1.6;
-            padding: 60px 0; 
+            padding: 60px 0;
             -webkit-font-smoothing: antialiased;
         }
 
-        .container { 
-            max-width: 1100px; 
-            margin: 0 auto; 
-            padding: 0 40px; 
+        .page-wrapper {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 40px;
         }
 
-        header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: baseline; 
-            margin-bottom: 120px; 
-        }
-
-        nav {
+        header {
             display: flex;
-            justify-content: flex-end;
-            gap: 25px; /* Empêche le chevauchement des liens */
-            align-items: center;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 100px;
+        }
+
+        .logo {
+            font-family: 'Lora', serif;
+            font-size: 32px;
+            letter-spacing: -1px;
+            font-weight: 400;
         }
 
         nav a {
             text-decoration: none;
             color: var(--text-color);
             font-size: 14px;
-            border-bottom: 1px solid transparent;
-            padding-bottom: 4px;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.2s ease;
-        }
-
-        nav a:hover, nav a.active {
             border-bottom: 1px solid var(--text-color);
+            padding-bottom: 4px;
         }
 
-        nav a.active {
-            font-weight: 700;
-        }
-
+        /* TITRE : Retour à Lora avec taille diminuée */
         h1 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: clamp(32px, 5.8vw, 82px); 
+            font-family: 'Lora', serif;
+            font-size: clamp(30px, 4.5vw, 64px); 
             font-weight: 600;
-            letter-spacing: -0.02em; 
-            line-height: 1;
-            margin-bottom: 100px;
+            letter-spacing: -0.03em;
+            margin-bottom: 80px;
             white-space: nowrap; 
-            outline: none;
+            line-height: 1.1;
         }
 
-        .logo {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 36px;
-            font-weight: 600;
-            letter-spacing: -1px;
-            cursor: default;
-            user-select: none;
-            text-transform: lowercase;
+        #sections-container {
+            display: flex;
+            flex-direction: column;
         }
 
         .section-row {
             display: grid;
-            grid-template-columns: 1fr 500px; 
+            grid-template-columns: 1fr 1.6fr;
             gap: 40px;
-            margin-bottom: 80px;
+            margin-bottom: 45px; /* Espace encore réduit entre les sections */
+            align-items: start;
         }
 
-        .label { font-size: 13px; font-weight: 700; outline: none; }
-        
-        .description p { 
-            font-size: 15px; 
-            margin-bottom: 25px; 
-            text-align: justify; 
-            outline: none; 
-        }
-        
-        .description a { 
-            color: var(--text-color); 
-            text-decoration: none; 
-            border-bottom: 1px solid var(--text-color); 
-            padding-bottom: 1px; 
+        /* Étiquettes uniformisées (Space Mono 16px Bold) */
+        .label {
+            font-family: 'Space Mono', monospace;
+            font-size: 16px; 
+            font-weight: 700;
+            outline: none;
+            display: block; /* Garantit un comportement identique pour toutes */
         }
 
-        .edit-mode-on [contenteditable="true"]:focus { 
-            background: rgba(59, 67, 140, 0.05); 
-            border-radius: 2px; 
+        .description p {
+            font-size: 15px;
+            margin-bottom: 15px;
+            text-align: justify;
+            outline: none;
+        }
+
+        .description a {
+            color: var(--text-color);
+            text-decoration: none;
+            border-bottom: 1px solid var(--text-color);
+            padding-bottom: 1px;
+        }
+
+        /* Style pour le cheat code (édition) */
+        [contenteditable="true"]:focus {
+            background: rgba(59, 67, 140, 0.05);
+            border-radius: 2px;
         }
 
         @media (max-width: 900px) {
-            h1 { white-space: normal; font-size: 38px; letter-spacing: -0.02em; }
-            .section-row { grid-template-columns: 1fr; gap: 10px; }
-            header { flex-direction: column; align-items: flex-start; gap: 20px; }
-            nav { justify-content: flex-start; width: 100%; gap: 20px; flex-wrap: wrap; }
+            h1 { white-space: normal; font-size: 38px; }
+            .section-row { grid-template-columns: 1fr; gap: 8px; }
+            header { margin-bottom: 60px; }
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
+    <div class="page-wrapper">
         <header>
-            <div id="logo-trigger" class="logo">oak</div>
-            <nav id="main-nav"></nav>
+            <div class="logo">oak</div>
+            <nav>
+                <a href="#">May 4th</a>
+            </nav>
         </header>
+
         <main>
-            <h1 id="page-title" contenteditable="false"></h1>
-            <div id="sections-container"></div>
+            <h1>Que peut le droit contre la force ?</h1>
+
+            <div id="sections-container">
+                
+                <div class="section-row">
+                    <div class="label" contenteditable="true">Calliclès</div>
+                    <div class="description">
+                        <p contenteditable="true">Dans l'analyse callicléenne, le droit positif est une construction artificielle des faibles pour neutraliser les tempéraments supérieurs. En érigeant l'égalité en norme, la cité opère un renversement de l'ordre naturel où prévaut la domination du plus apte.</p>
+                        <p contenteditable="true">La justice conventionnelle n'est ici qu'un paravent destiné à masquer la peur des masses. La seule véritable loi est celle de la nature, qui exige que le plus fort l'emporte. <a href="https://fr.wikisource.org/wiki/Gorgias/Édition_Chambry" target="_blank">Source : Platon, Gorgias.</a></p>
+                    </div>
+                </div>
+
+                <div class="section-row">
+                    <div class="label" contenteditable="true">Rousseau</div>
+                    <div class="description">
+                        <p contenteditable="true">La force est une puissance physique dont aucun effet moral ne saurait résulter. Céder à la force est un acte de nécessité, non de volonté. Le droit ne naît qu'au moment où la force se transmue en autorité légitime par le pacte social.</p>
+                        <p contenteditable="true">Le droit peut tout contre la force parce qu'il change la nature de l'obéissance : le citoyen n'obéit plus à un homme, mais à la volonté générale. <a href="https://gallica.bnf.fr/ark:/12148/bpt6k118391t" target="_blank">Source : Du Contrat Social.</a></p>
+                    </div>
+                </div>
+
+                <div class="section-row">
+                    <div class="label" contenteditable="true">Max Weber</div>
+                    <div class="description">
+                        <p contenteditable="true">Le droit et la force se structurent mutuellement au sein de l'État moderne. Ce dernier se définit par la revendication du monopole de la violence physique légitime. Le droit devient la procédure de rationalisation de la force.</p>
+                        <p contenteditable="true">La force ne s'exerce plus de manière aléatoire, mais selon une domination légale-rationnelle. Le droit encadre la contrainte pour assurer la stabilité du corps social. <a href="https://classiques.uqac.ca/classiques/weber_max/le_savant_et_le_politique/le_savant_et_le_politique.html" target="_blank">Source : Le Savant et le Politique.</a></p>
+                    </div>
+                </div>
+
+                <div class="section-row">
+                    <div class="label" contenteditable="true">Bakounine</div>
+                    <div class="description">
+                        <p contenteditable="true">Tout État est une force organisée qui s'impose à l'individu. Le droit n'est que la consécration légale de cette violence institutionnalisée. Il n'y a pas de droit "juste" car la loi est, par essence, une limitation coercitive de la liberté.</p>
+                        <p contenteditable="true">La force du droit est celle d'une minorité privilégiée masquée derrière l'abstraction de la loi. Seule la révolution sociale peut abolir cette fiction juridique. <a href="https://fr.wikisource.org/wiki/Dieu_et_l’État" target="_blank">Source : Dieu et l'État.</a></p>
+                    </div>
+                </div>
+
+                <div class="section-row">
+                    <div class="label" contenteditable="true">Gandhi</div>
+                    <div class="description">
+                        <p contenteditable="true">Le droit puise sa force dans une exigence éthique supérieure : la vérité. Face à la force brute de l'oppresseur, le droit s'incarne dans la non-violence active, qui désarme l'adversaire en faisant appel à sa conscience morale.</p>
+                        <p contenteditable="true">Le droit l'emporte contre la force dès qu'il refuse de se placer sur le terrain de la violence physique pour affirmer une autorité spirituelle souveraine. <a href="https://www.philosophie-magazine.com/articles/gandhi-penseur-de-la-non-violence" target="_blank">Analyse : Philosophie Magazine.</a></p>
+                    </div>
+                </div>
+
+            </div>
         </main>
     </div>
 
-    <!-- Le fichier content.js doit contenir votre variable blogData -->
-    <script src="content.js"></script>
-
     <script>
-        let isEditMode = false;
-        let currentIndex = 0;
-
-        function parseLinks(text) {
-            return text.replace(/\[([^|]+)\|([^\]]+)\]/g, '<a href="$2" target="_blank">$1</a>');
-        }
-
-        function renderSite() {
-            const data = blogData[currentIndex];
-            const pageKey = data.menuTitle.replace(/\s+/g, '-').toLowerCase();
-
-            // Rendu du Menu de Navigation
-            const nav = document.getElementById('main-nav');
-            nav.innerHTML = '';
-            blogData.forEach((page, index) => {
-                const link = document.createElement('a');
-                link.innerText = page.menuTitle;
-                if(index === currentIndex) link.classList.add('active');
-                link.onclick = () => { 
-                    currentIndex = index; 
-                    renderSite(); 
-                };
-                nav.appendChild(link); // Ordre logique des pages
-            });
-
-            // Rendu du Titre
-            const titleEl = document.getElementById('page-title');
-            const savedTitle = localStorage.getItem(`title-${pageKey}`);
-            titleEl.innerText = savedTitle || data.pageHeadline;
-
-            // Rendu des Sections
+        // Mélange aléatoire au chargement
+        window.addEventListener('DOMContentLoaded', () => {
             const container = document.getElementById('sections-container');
-            container.innerHTML = '';
-            
-            // On clone pour ne pas modifier l'original lors du tri aléatoire
-            const shuffled = [...data.sections].sort(() => 0.5 - Math.random());
-            
-            shuffled.forEach(item => {
-                const section = document.createElement('div');
-                section.className = 'section-row';
-                const sectionKey = item.section.replace(/\s+/g, '-').toLowerCase();
-                
-                const savedLabel = localStorage.getItem(`label-${pageKey}-${sectionKey}`);
-                const savedText = localStorage.getItem(`text-${pageKey}-${sectionKey}`);
-
-                section.innerHTML = `
-                    <div class="label" data-sec="${sectionKey}" data-type="label" contenteditable="${isEditMode}">${savedLabel || item.section}</div>
-                    <div class="description">
-                        <p data-sec="${sectionKey}" data-type="text" contenteditable="${isEditMode}">${parseLinks(savedText || item.text)}</p>
-                    </div>
-                `;
-                container.appendChild(section);
-            });
-        }
-
-        // Système de déverrouillage (5 clics sur le logo)
-        let count = 0, timer;
-        document.getElementById('logo-trigger').addEventListener('click', () => {
-            count++; clearTimeout(timer);
-            timer = setTimeout(() => count = 0, 1000);
-            if (count === 5) {
-                isEditMode = !isEditMode;
-                document.body.classList.toggle('edit-mode-on', isEditMode);
-                renderSite();
-                count = 0;
+            const sections = Array.from(container.getElementsByClassName('section-row'));
+            for (let i = sections.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                container.appendChild(sections[j]);
             }
         });
-
-        // Sauvegarde automatique
-        document.addEventListener('input', (e) => {
-            const el = e.target;
-            const pageKey = blogData[currentIndex].menuTitle.replace(/\s+/g, '-').toLowerCase();
-            if (el.id === 'page-title') {
-                localStorage.setItem(`title-${pageKey}`, el.innerText);
-            } else if (el.hasAttribute('data-sec')) {
-                localStorage.setItem(`${el.dataset.type}-${pageKey}-${el.dataset.sec}`, el.innerText);
-            }
-        });
-
-        renderSite();
     </script>
 </body>
 </html>
