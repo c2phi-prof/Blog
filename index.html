@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>oak - Blog Philo</title>
-    <!-- Importation des polices originales du projet -->
     <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,600;1,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
@@ -18,20 +17,19 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            font-family: 'Space Mono', monospace; /* Police par défaut pour le contenu */
+            font-family: 'Space Mono', monospace;
             line-height: 1.6;
             padding: 60px 0;
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Conteneur principal calé sur 1100px */
+        /* Conteneur principal */
         .container {
             max-width: 1100px;
             margin: 0 auto;
             padding: 0 40px;
         }
 
-        /* Header : Logo à gauche, Nav à droite flush sur la marge */
         header {
             display: flex;
             justify-content: space-between;
@@ -48,12 +46,10 @@
             user-select: none;
         }
 
-        /* Navigation : s'étend vers la gauche, alignée à droite */
         nav {
             display: flex;
             justify-content: flex-end;
             gap: 40px;
-            flex-grow: 1;
         }
 
         nav a {
@@ -72,7 +68,6 @@
             border-bottom: 1px solid var(--text-color);
         }
 
-        /* Headline : Style Oak original */
         h1 {
             font-family: 'Lora', serif;
             font-size: clamp(30px, 5.5vw, 80px); 
@@ -84,10 +79,12 @@
             outline: none;
         }
 
-        /* Grille des sections : Ratio 1:1.6 pour l'équilibre visuel */
+        /* LA CORRECTION EST ICI : 
+           On force la deuxième colonne à faire exactement 500px 
+           pour retrouver le style étroit du modèle original. */
         .section-row {
             display: grid;
-            grid-template-columns: 1fr 1.6fr;
+            grid-template-columns: 1fr 500px; 
             gap: 40px;
             margin-bottom: 80px;
         }
@@ -103,9 +100,9 @@
             margin-bottom: 25px;
             text-align: justify;
             outline: none;
+            /* Le max-width est garanti par la colonne de 500px de la grille */
         }
 
-        /* Style des liens internes */
         .description a {
             color: var(--text-color);
             text-decoration: none;
@@ -113,13 +110,11 @@
             padding-bottom: 1px;
         }
 
-        /* Mode édition visuel */
         .edit-mode-on [contenteditable="true"]:focus {
             background: rgba(59, 67, 140, 0.05);
             border-radius: 2px;
         }
 
-        /* Responsive Mobile */
         @media (max-width: 900px) {
             h1 { white-space: normal; font-size: 40px; }
             .section-row { grid-template-columns: 1fr; gap: 10px; }
@@ -142,14 +137,12 @@
         </main>
     </div>
 
-    <!-- Chargement de vos données depuis content.js -->
     <script src="content.js"></script>
 
     <script>
         let isEditMode = false;
         let currentIndex = 0;
 
-        // Fonction pour transformer [Texte|URL] en lien HTML
         function parseLinks(text) {
             return text.replace(/\[([^|]+)\|([^\]]+)\]/g, '<a href="$2" target="_blank">$1</a>');
         }
@@ -158,7 +151,6 @@
             const data = blogData[currentIndex];
             const pageKey = data.menuTitle.replace(/\s+/g, '-').toLowerCase();
 
-            // 1. Navigation : On insère au début (prepend) pour que le 1er du JS soit à droite
             const nav = document.getElementById('main-nav');
             nav.innerHTML = '';
             blogData.forEach((page, index) => {
@@ -169,12 +161,10 @@
                 nav.prepend(link); 
             });
 
-            // 2. Headline
             const titleEl = document.getElementById('page-title');
             const savedTitle = localStorage.getItem(`title-${pageKey}`);
             titleEl.innerText = savedTitle || data.pageHeadline;
 
-            // 3. Sections (Mélangées)
             const container = document.getElementById('sections-container');
             container.innerHTML = '';
             const shuffled = [...data.sections].sort(() => 0.5 - Math.random());
@@ -183,7 +173,6 @@
                 const section = document.createElement('div');
                 section.className = 'section-row';
                 const sectionKey = item.section.replace(/\s+/g, '-').toLowerCase();
-
                 const savedLabel = localStorage.getItem(`label-${pageKey}-${sectionKey}`);
                 const savedText = localStorage.getItem(`text-${pageKey}-${sectionKey}`);
 
@@ -197,7 +186,6 @@
             });
         }
 
-        // --- CHEAT CODE (5 clics sur logo) ---
         let count = 0, timer;
         document.getElementById('logo-trigger').addEventListener('click', () => {
             count++; clearTimeout(timer);
@@ -210,17 +198,13 @@
             }
         });
 
-        // --- SAUVEGARDE LOCALE AUTOMATIQUE ---
         document.addEventListener('input', (e) => {
             const el = e.target;
             const pageKey = blogData[currentIndex].menuTitle.replace(/\s+/g, '-').toLowerCase();
-            
             if (el.id === 'page-title') {
                 localStorage.setItem(`title-${pageKey}`, el.innerText);
             } else if (el.hasAttribute('data-sec')) {
-                const secKey = el.dataset.sec;
-                const type = el.dataset.type;
-                localStorage.setItem(`${type}-${pageKey}-${secKey}`, el.innerText);
+                localStorage.setItem(`${el.dataset.type}-${pageKey}-${el.dataset.sec}`, el.innerText);
             }
         });
 
