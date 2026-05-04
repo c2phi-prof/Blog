@@ -4,32 +4,122 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>oak - Blog Philo</title>
+    <!-- Importation des polices originales du projet -->
     <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,600;1,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
     <style>
-        :root { --bg-color: #fdfaf3; --text-color: #3b438c; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background-color: var(--bg-color); color: var(--text-color);
-            font-family: 'Space Mono', monospace; line-height: 1.6;
-            padding: 60px 0; -webkit-font-smoothing: antialiased;
+        :root {
+            --bg-color: #fdfaf3;
+            --text-color: #3b438c;
         }
-        .container { max-width: 1100px; margin: 0 auto; padding: 0 40px; }
-        header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 120px; }
-        .logo { font-family: 'Lora', serif; font-size: 32px; font-weight: 400; letter-spacing: -1px; cursor: default; user-select: none; }
-        
-        /* Navigation alignée à droite, extension vers la gauche */
-        nav { display: flex; justify-content: flex-end; gap: 40px; flex-grow: 1; }
-        nav a { text-decoration: none; color: var(--text-color); font-size: 14px; border-bottom: 1px solid transparent; padding-bottom: 4px; opacity: 0.5; cursor: pointer; white-space: nowrap; }
-        nav a.active { opacity: 1; border-bottom: 1px solid var(--text-color); }
-        
-        h1 { font-family: 'Lora', serif; font-size: clamp(30px, 5.5vw, 80px); font-weight: 600; letter-spacing: -0.04em; margin-bottom: 100px; white-space: nowrap; line-height: 1.1; outline: none; }
-        .section-row { display: grid; grid-template-columns: 1fr 1.6fr; gap: 40px; margin-bottom: 80px; }
-        .label { font-size: 13px; font-weight: 700; outline: none; }
-        .description p { font-size: 15px; margin-bottom: 25px; text-align: justify; outline: none; }
-        .description a { color: var(--text-color); text-decoration: none; border-bottom: 1px solid var(--text-color); padding-bottom: 1px; }
-        
-        .edit-mode-on [contenteditable="true"]:focus { background: rgba(59, 67, 140, 0.05); border-radius: 2px; }
-        
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Space Mono', monospace; /* Police par défaut pour le contenu */
+            line-height: 1.6;
+            padding: 60px 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Conteneur principal calé sur 1100px */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+
+        /* Header : Logo à gauche, Nav à droite flush sur la marge */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 120px;
+        }
+
+        .logo {
+            font-family: 'Lora', serif;
+            font-size: 32px;
+            font-weight: 400;
+            letter-spacing: -1px;
+            cursor: default;
+            user-select: none;
+        }
+
+        /* Navigation : s'étend vers la gauche, alignée à droite */
+        nav {
+            display: flex;
+            justify-content: flex-end;
+            gap: 40px;
+            flex-grow: 1;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--text-color);
+            font-size: 14px;
+            border-bottom: 1px solid transparent;
+            padding-bottom: 4px;
+            opacity: 0.5;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        nav a.active {
+            opacity: 1;
+            border-bottom: 1px solid var(--text-color);
+        }
+
+        /* Headline : Style Oak original */
+        h1 {
+            font-family: 'Lora', serif;
+            font-size: clamp(30px, 5.5vw, 80px); 
+            font-weight: 600;
+            letter-spacing: -0.04em;
+            margin-bottom: 100px;
+            white-space: nowrap; 
+            line-height: 1.1;
+            outline: none;
+        }
+
+        /* Grille des sections : Ratio 1:1.6 pour l'équilibre visuel */
+        .section-row {
+            display: grid;
+            grid-template-columns: 1fr 1.6fr;
+            gap: 40px;
+            margin-bottom: 80px;
+        }
+
+        .label {
+            font-size: 13px;
+            font-weight: 700;
+            outline: none;
+        }
+
+        .description p {
+            font-size: 15px;
+            margin-bottom: 25px;
+            text-align: justify;
+            outline: none;
+        }
+
+        /* Style des liens internes */
+        .description a {
+            color: var(--text-color);
+            text-decoration: none;
+            border-bottom: 1px solid var(--text-color);
+            padding-bottom: 1px;
+        }
+
+        /* Mode édition visuel */
+        .edit-mode-on [contenteditable="true"]:focus {
+            background: rgba(59, 67, 140, 0.05);
+            border-radius: 2px;
+        }
+
+        /* Responsive Mobile */
         @media (max-width: 900px) {
             h1 { white-space: normal; font-size: 40px; }
             .section-row { grid-template-columns: 1fr; gap: 10px; }
@@ -45,18 +135,21 @@
             <div id="logo-trigger" class="logo">oak</div>
             <nav id="main-nav"></nav>
         </header>
+
         <main>
             <h1 id="page-title" contenteditable="false"></h1>
             <div id="sections-container"></div>
         </main>
     </div>
 
+    <!-- Chargement de vos données depuis content.js -->
     <script src="content.js"></script>
 
     <script>
         let isEditMode = false;
         let currentIndex = 0;
 
+        // Fonction pour transformer [Texte|URL] en lien HTML
         function parseLinks(text) {
             return text.replace(/\[([^|]+)\|([^\]]+)\]/g, '<a href="$2" target="_blank">$1</a>');
         }
@@ -65,7 +158,7 @@
             const data = blogData[currentIndex];
             const pageKey = data.menuTitle.replace(/\s+/g, '-').toLowerCase();
 
-            // 1. Navigation : On inverse l'ordre d'affichage
+            // 1. Navigation : On insère au début (prepend) pour que le 1er du JS soit à droite
             const nav = document.getElementById('main-nav');
             nav.innerHTML = '';
             blogData.forEach((page, index) => {
@@ -73,16 +166,15 @@
                 link.innerText = page.menuTitle;
                 if(index === currentIndex) link.classList.add('active');
                 link.onclick = () => { currentIndex = index; renderSite(); };
-                // .prepend insère au début, donc le premier du JS finit à la fin (à droite)
                 nav.prepend(link); 
             });
 
-            // 2. Titre
+            // 2. Headline
             const titleEl = document.getElementById('page-title');
             const savedTitle = localStorage.getItem(`title-${pageKey}`);
             titleEl.innerText = savedTitle || data.pageHeadline;
 
-            // 3. Sections
+            // 3. Sections (Mélangées)
             const container = document.getElementById('sections-container');
             container.innerHTML = '';
             const shuffled = [...data.sections].sort(() => 0.5 - Math.random());
@@ -91,20 +183,21 @@
                 const section = document.createElement('div');
                 section.className = 'section-row';
                 const sectionKey = item.section.replace(/\s+/g, '-').toLowerCase();
+
                 const savedLabel = localStorage.getItem(`label-${pageKey}-${sectionKey}`);
                 const savedText = localStorage.getItem(`text-${pageKey}-${sectionKey}`);
 
                 section.innerHTML = `
-                    <div class="label" data-page="${pageKey}" data-sec="${sectionKey}" data-type="label" contenteditable="${isEditMode}">${savedLabel || item.section}</div>
+                    <div class="label" data-sec="${sectionKey}" data-type="label" contenteditable="${isEditMode}">${savedLabel || item.section}</div>
                     <div class="description">
-                        <p data-page="${pageKey}" data-sec="${sectionKey}" data-type="text" contenteditable="${isEditMode}">${parseLinks(savedText || item.text)}</p>
+                        <p data-sec="${sectionKey}" data-type="text" contenteditable="${isEditMode}">${parseLinks(savedText || item.text)}</p>
                     </div>
                 `;
                 container.appendChild(section);
             });
         }
 
-        // CHEAT CODE
+        // --- CHEAT CODE (5 clics sur logo) ---
         let count = 0, timer;
         document.getElementById('logo-trigger').addEventListener('click', () => {
             count++; clearTimeout(timer);
@@ -117,14 +210,17 @@
             }
         });
 
-        // SAUVEGARDE LOCALE
+        // --- SAUVEGARDE LOCALE AUTOMATIQUE ---
         document.addEventListener('input', (e) => {
             const el = e.target;
             const pageKey = blogData[currentIndex].menuTitle.replace(/\s+/g, '-').toLowerCase();
+            
             if (el.id === 'page-title') {
                 localStorage.setItem(`title-${pageKey}`, el.innerText);
             } else if (el.hasAttribute('data-sec')) {
-                localStorage.setItem(`${el.dataset.type}-${pageKey}-${el.dataset.sec}`, el.innerText);
+                const secKey = el.dataset.sec;
+                const type = el.dataset.type;
+                localStorage.setItem(`${type}-${pageKey}-${secKey}`, el.innerText);
             }
         });
 
