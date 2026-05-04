@@ -7,83 +7,36 @@
     <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,600;1,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
-        :root {
-            --bg-color: #fdfaf3;
-            --text-color: #3b438c;
-        }
-
+        :root { --bg-color: #fdfaf3; --text-color: #3b438c; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'Space Mono', monospace;
-            line-height: 1.6;
-            padding: 60px 0;
-            -webkit-font-smoothing: antialiased;
+            background-color: var(--bg-color); color: var(--text-color);
+            font-family: 'Space Mono', monospace; line-height: 1.6;
+            padding: 60px 0; -webkit-font-smoothing: antialiased;
         }
 
-        /* Conteneur principal */
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 0 40px;
-        }
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 40px; }
 
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 120px;
-        }
+        header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 120px; }
+        .logo { font-family: 'Lora', serif; font-size: 32px; font-weight: 400; letter-spacing: -1px; cursor: default; user-select: none; }
+        
+        nav { display: flex; justify-content: flex-end; gap: 40px; flex-grow: 1; }
+        nav a { text-decoration: none; color: var(--text-color); font-size: 14px; border-bottom: 1px solid transparent; padding-bottom: 4px; opacity: 0.5; cursor: pointer; white-space: nowrap; }
+        nav a.active { opacity: 1; border-bottom: 1px solid var(--text-color); }
 
-        .logo {
-            font-family: 'Lora', serif;
-            font-size: 32px;
-            font-weight: 400;
-            letter-spacing: -1px;
-            cursor: default;
-            user-select: none;
-        }
-
-        nav {
-            display: flex;
-            justify-content: flex-end;
-            gap: 40px;
-        }
-
-        nav a {
-            text-decoration: none;
-            color: var(--text-color);
-            font-size: 14px;
-            border-bottom: 1px solid transparent;
-            padding-bottom: 4px;
-            opacity: 0.5;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-
-        nav a.active {
-            opacity: 1;
-            border-bottom: 1px solid var(--text-color);
-        }
-
+        /* H1 AJUSTÉ : Plus compact pour éviter le débordement */
         h1 {
-    font-family: 'Lora', serif;
-    font-size: clamp(30px, 5.5vw, 80px); 
-    font-weight: 600;
-    letter-spacing: -0.04em;
-    margin-bottom: 100px;
-    
-    /* MODIFICATIONS ICI */
-    white-space: normal;      /* On autorise le retour à la ligne */
-    line-height: 1.05;        /* Interligne très serré pour garder l'aspect "bloc" */
-    max-width: 1000px;        /* On limite un peu pour éviter que le titre soit trop large */
-    overflow-wrap: break-word; /* Sécurité pour les mots très longs */
-}
-        /* LA CORRECTION EST ICI : 
-           On force la deuxième colonne à faire exactement 500px 
-           pour retrouver le style étroit du modèle original. */
+            font-family: 'Lora', serif;
+            font-size: clamp(30px, 5.2vw, 76px); 
+            font-weight: 600;
+            letter-spacing: -0.05em; /* Un peu plus serré */
+            margin-bottom: 100px;
+            white-space: normal;     /* Sécurité : retour à la ligne si vraiment trop long */
+            line-height: 1;        /* Interligne compact si passage sur 2 lignes */
+            outline: none;
+        }
+
         .section-row {
             display: grid;
             grid-template-columns: 1fr 500px; 
@@ -91,34 +44,14 @@
             margin-bottom: 80px;
         }
 
-        .label {
-            font-size: 13px;
-            font-weight: 700;
-            outline: none;
-        }
+        .label { font-size: 13px; font-weight: 700; outline: none; }
+        .description p { font-size: 15px; margin-bottom: 25px; text-align: justify; outline: none; }
+        .description a { color: var(--text-color); text-decoration: none; border-bottom: 1px solid var(--text-color); padding-bottom: 1px; }
 
-        .description p {
-            font-size: 15px;
-            margin-bottom: 25px;
-            text-align: justify;
-            outline: none;
-            /* Le max-width est garanti par la colonne de 500px de la grille */
-        }
-
-        .description a {
-            color: var(--text-color);
-            text-decoration: none;
-            border-bottom: 1px solid var(--text-color);
-            padding-bottom: 1px;
-        }
-
-        .edit-mode-on [contenteditable="true"]:focus {
-            background: rgba(59, 67, 140, 0.05);
-            border-radius: 2px;
-        }
+        .edit-mode-on [contenteditable="true"]:focus { background: rgba(59, 67, 140, 0.05); border-radius: 2px; }
 
         @media (max-width: 900px) {
-            h1 { white-space: normal; font-size: 40px; }
+            h1 { white-space: normal; font-size: 38px; letter-spacing: -0.02em; }
             .section-row { grid-template-columns: 1fr; gap: 10px; }
             header { flex-direction: column; align-items: flex-start; gap: 20px; }
             nav { justify-content: flex-start; width: 100%; gap: 20px; flex-wrap: wrap; }
@@ -132,7 +65,6 @@
             <div id="logo-trigger" class="logo">oak</div>
             <nav id="main-nav"></nav>
         </header>
-
         <main>
             <h1 id="page-title" contenteditable="false"></h1>
             <div id="sections-container"></div>
