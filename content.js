@@ -44,7 +44,7 @@ const blogData = {
             }
             // Ajoutez autant de sections que vous voulez
         ]
-    },
+    }
 
 
 
