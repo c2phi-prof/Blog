@@ -1,7 +1,7 @@
 // content.js
 const blogData = [
     {
-        menuTitle: "Justice",
+        menuTitle: "May 4th be with you",
         pageHeadline: "Que peut le droit contre la force ?",
         sections: [
             {
