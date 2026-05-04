@@ -1,6 +1,6 @@
 // content.js
-const blogData = {
-    "page1": {
+const blogData = [
+    {
         menuTitle: "May 4th",
         pageHeadline: "Que peut le droit contre la force ?",
         sections: [
@@ -14,7 +14,7 @@ const blogData = {
             }
         ]
     },
-    "page2": {
+    {
         menuTitle: "Justice",
         pageHeadline: "La justice est-elle une simple vengeance ?",
         sections: [
@@ -24,4 +24,4 @@ const blogData = {
             }
         ]
     }
-};
+];
