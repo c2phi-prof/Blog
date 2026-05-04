@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>oak - Blog Philo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,600;1,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-color: #fdfaf3; --text-color: #3b438c; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: var(--bg-color); color: var(--text-color);
+            font-family: 'Space Mono', monospace; line-height: 1.6;
+            padding: 40px 20px; -webkit-font-smoothing: antialiased;
+        }
+        .container { max-width: 1100px; margin: 0 auto; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 120px; }
+        .logo { font-family: 'Lora', serif; font-size: 32px; font-weight: 400; letter-spacing: -1px; cursor: default; user-select: none; }
+        nav { display: flex; justify-content: flex-end; gap: 30px; }
+        nav a { text-decoration: none; color: var(--text-color); font-size: 14px; border-bottom: 1px solid transparent; padding-bottom: 4px; opacity: 0.5; cursor: pointer; }
+        nav a.active { opacity: 1; border-bottom: 1px solid var(--text-color); }
+        h1 { font-family: 'Lora', serif; font-size: clamp(30px, 5.5vw, 80px); font-weight: 600; letter-spacing: -0.04em; margin-bottom: 100px; white-space: nowrap; line-height: 1.1; outline: none; }
+        .section-row { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 100px; }
+        .label { font-size: 13px; font-weight: 700; outline: none; }
+        .description p { font-size: 15px; margin-bottom: 25px; max-width: 500px; text-align: justify; outline: none; }
+        .description a { color: var(--text-color); text-decoration: none; border-bottom: 1px solid var(--text-color); padding-bottom: 1px; }
+        .edit-mode-on [contenteditable="true"]:focus { background: rgba(59, 67, 140, 0.05); border-radius: 2px; }
+        @media (max-width: 900px) {
+            h1 { white-space: normal; font-size: 40px; }
+            .section-row { grid-template-columns: 1fr; }
+            header { flex-direction: column; align-items: flex-start; gap: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <div id="logo-trigger" class="logo">oak</div>
+            <nav id="main-nav"></nav>
+        </header>
+        <main>
+            <h1 id="page-title" contenteditable="false"></h1>
+            <div id="sections-container"></div>
+        </main>
+    </div>
+
+    <!-- Chargement des données -->
+    <script src="content.js"></script>
+
+    <script>
+        let isEditMode = false;
+        let currentPageId = Object.keys(blogData)[0]; // Par défaut, première page
+
+        // Traducteur de liens : [Texte|URL] -> <a href="URL">Texte</a>
+        function parseLinks(text) {
+            return text.replace(/\[([^|]+)\|([^\]]+)\]/g, '<a href="$2" target="_blank">$1</a>');
+        }
+
+        function renderSite() {
+            // 1. Générer le Menu
+            const nav = document.getElementById('main-nav');
+            nav.innerHTML = '';
+            Object.keys(blogData).forEach(id => {
+                const link = document.createElement('a');
+                link.innerText = blogData[id].menuTitle;
+                if(id === currentPageId) link.classList.add('active');
+                link.onclick = () => { currentPageId = id; renderSite(); };
+                nav.appendChild(link);
+            });
+
+            // 2. Générer le Titre (avec sauvegarde locale)
+            const titleEl = document.getElementById('page-title');
+            const savedTitle = localStorage.getItem(`title-${currentPageId}`);
+            titleEl.innerText = savedTitle || blogData[currentPageId].pageHeadline;
+            titleEl.dataset.pageId = currentPageId;
+
+            // 3. Générer les Sections (Mélangées)
+            const container = document.getElementById('sections-container');
+            container.innerHTML = '';
+            const shuffled = [...blogData[currentPageId].sections].sort(() => 0.5 - Math.random());
+            
+            shuffled.forEach(item => {
+                const section = document.createElement('div');
+                section.className = 'section-row';
+                
+                const savedLabel = localStorage.getItem(`label-${currentPageId}-${item.id}`);
+                const savedText = localStorage.getItem(`text-${currentPageId}-${item.id}`);
+
+                section.innerHTML = `
+                    <div class="label" data-id="${item.id}" data-type="label" contenteditable="${isEditMode}">${savedLabel || item.label}</div>
+                    <div class="description">
+                        <p data-id="${item.id}" data-type="text" contenteditable="${isEditMode}">${parseLinks(savedText || item.text)}</p>
+                    </div>
+                `;
+                container.appendChild(section);
+            });
+        }
+
+        // --- CHEAT CODE (5 clics sur logo) ---
+        let count = 0, timer;
+        document.getElementById('logo-trigger').addEventListener('click', () => {
+            count++; clearTimeout(timer);
+            timer = setTimeout(() => count = 0, 1000);
+            if (count === 5) {
+                isEditMode = !isEditMode;
+                document.body.classList.toggle('edit-mode-on', isEditMode);
+                renderSite(); // Rafraîchit pour activer le contenteditable
+                count = 0;
+            }
+        });
+
+        // --- SAUVEGARDE AUTOMATIQUE ---
+        document.addEventListener('input', (e) => {
+            const el = e.target;
+            if (el.id === 'page-title') {
+                localStorage.setItem(`title-${currentPageId}`, el.innerText);
+            } else if (el.hasAttribute('data-id')) {
+                const id = el.dataset.id;
+                const type = el.dataset.type;
+                localStorage.setItem(`${type}-${currentPageId}-${id}`, el.innerText);
+            }
+        });
+
+        renderSite();
+    </script>
+</body>
+</html>
